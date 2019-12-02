@@ -13,7 +13,7 @@ class AdventofcodeTest {
         val mass1 = 1969
         val mass2 = 100756
 
-        assertThat(calculateFuel(mass1), equalTo(654))
-        assertThat(calculateFuel(mass2), equalTo(33583))
+        assertThat(calculateFuel(mass1), equalTo(966))
+        assertThat(calculateFuel(mass2), equalTo(50346))
     }
 }
