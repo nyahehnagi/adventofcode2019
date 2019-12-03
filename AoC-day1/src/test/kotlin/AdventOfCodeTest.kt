@@ -21,7 +21,7 @@ class AdventofcodeTest {
         val wire1Coords =  listOf(Pair(0,0), Pair(0,1))
         val wire2Coords = listOf(Pair(0,0),Pair(0,1))
 
-        //assertThat(getIntersectingPoints(wire1Coords,wire2Coords), equalTo(listOf(Pair(0,0),Pair(0,1))))
+        assertThat(getIntersectingPoints(wire1Coords,wire2Coords), equalTo(listOf(Triple(Pair(0,0),0,0),Triple(Pair(0,1),1,1))))
 
     }
 
