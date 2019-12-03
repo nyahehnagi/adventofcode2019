@@ -32,26 +32,27 @@ fun calculateManhattanDistance(firstWire: String, secondWire: String): Int {
 
 }
 
-fun getShortestManhattanDistance(intersectingPoints: List<Point>): Int {
-    var shortestDistance = 0
+fun getShortestManhattanDistance(intersectingPoints: List<Triple<Point, Int, Int>>): Int {
+
+    var shortestMoves = 0
     intersectingPoints.forEach {
-        if (shortestDistance == 0 || abs(it.first) + abs(it.second) < shortestDistance) {
-            shortestDistance = abs(it.first) + abs(it.second)
+        if ( shortestMoves == 0 || it.second + it.third < shortestMoves) {
+            //abs(it.first.first) + abs(it.first.second) < shortestDistance
+            shortestMoves = it.second + it.third
         }
     }
 
-    return shortestDistance
+    return shortestMoves
 }
 
-fun getIntersectingPoints(wire1Points: List<Point>, wire2Points: List<Point>): List<Point> {
-    val intersectingPointsList: MutableList<Point> = mutableListOf()
+fun getIntersectingPoints(wire1Points: List<Point>, wire2Points: List<Point>): List<Triple<Point, Int, Int>> {
+    val intersectingPointsList: MutableList<Triple<Point, Int, Int>> = mutableListOf()
 
-    wire1Points.forEach {
-        if (wire2Points.contains(it)){
-            intersectingPointsList.add(it)
+    wire1Points.forEachIndexed { index, point ->
+        if (wire2Points.contains(point)) {
+            intersectingPointsList.add(Triple(point, index, wire2Points.indexOf(point)))
         }
     }
-
 
     return intersectingPointsList
 }

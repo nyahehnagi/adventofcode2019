@@ -21,7 +21,7 @@ class AdventofcodeTest {
         val wire1Coords =  listOf(Pair(0,0), Pair(0,1))
         val wire2Coords = listOf(Pair(0,0),Pair(0,1))
 
-        assertThat(getIntersectingPoints(wire1Coords,wire2Coords), equalTo(listOf(Pair(0,0),Pair(0,1))))
+        //assertThat(getIntersectingPoints(wire1Coords,wire2Coords), equalTo(listOf(Pair(0,0),Pair(0,1))))
 
     }
 
@@ -34,9 +34,9 @@ class AdventofcodeTest {
         val wire3 = "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
         val wire4 = "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"
 
-        assertThat(calculateManhattanDistance(wire1,wire2), equalTo(159))
-        assertThat(calculateManhattanDistance(wire5,wire6), equalTo(6))
-        assertThat(calculateManhattanDistance(wire3,wire4), equalTo(135))
+        assertThat(calculateManhattanDistance(wire5,wire6), equalTo(30))
+        assertThat(calculateManhattanDistance(wire1,wire2), equalTo(610))
+        assertThat(calculateManhattanDistance(wire3,wire4), equalTo(410))
     }
 
     @Test
