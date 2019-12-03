@@ -1,6 +1,7 @@
 package adventofcode
 
 import java.io.File
+import kotlin.math.abs
 import kotlin.math.floor
 
 //https://adventofcode.com/2019/day/2
@@ -34,8 +35,8 @@ fun calculateManhattanDistance(firstWire: String, secondWire: String): Int {
 fun getShortestManhattanDistance(intersectingPoints: List<Point>): Int {
     var shortestDistance = 0
     intersectingPoints.forEach {
-        if (shortestDistance == 0 || it.first + it.second < shortestDistance) {
-            shortestDistance = it.first + it.second
+        if (shortestDistance == 0 || abs(it.first) + abs(it.second) < shortestDistance) {
+            shortestDistance = abs(it.first) + abs(it.second)
         }
     }
 
@@ -45,48 +46,13 @@ fun getShortestManhattanDistance(intersectingPoints: List<Point>): Int {
 fun getIntersectingPoints(wire1Points: List<Point>, wire2Points: List<Point>): List<Point> {
     val intersectingPointsList: MutableList<Point> = mutableListOf()
 
-    wire1Points.forEachIndexed { index1, point ->
-        if (index1 < wire1Points.lastIndex) {
-
-            var verticalWire1 = false
-            var horizontalWire1 = false
-            if (point.first == wire1Points[index1 + 1].first) {
-
-                verticalWire1 = true
-            }
-            if (point.second == wire1Points[index1 + 1].second) {
-
-                horizontalWire1 = true
-            }
-
-            wire2Points.forEachIndexed { index2, point2 ->
-                if (index2 < wire2Points.lastIndex) {
-                    if (point2.first == wire2Points[index2 + 1].first) { //vertical wire2
-                        if (horizontalWire1){
-
-
-
-
-
-                            if ((point2.first in point.first..wire1Points[index1 + 1].first) && (point.second in point2.second..wire2Points[index2 + 1].second)){
-                                intersectingPointsList.add(Point(point2.first, point.second))
-                            }
-                        }
-                    }
-                    if (point2.second == wire2Points[index2 + 1].second) {//horizontal wire2
-                        if (verticalWire1){
-                            if (point2.second in point.second..wire1Points[index1 + 1].second && point.first in point2.first..wire2Points[index2 + 1].first){
-                                intersectingPointsList.add(Point(point.first, point2.second))
-                            }
-                        }
-                    }
-
-                }
-            }
+    wire1Points.forEach {
+        if (wire2Points.contains(it)){
+            intersectingPointsList.add(it)
         }
-
-
     }
+
+
     return intersectingPointsList
 }
 
@@ -95,23 +61,45 @@ fun createListOfPoints(wireInstructions: String): List<Point> {
     val pointList: MutableList<Point> = mutableListOf(Pair(0, 0))
 
     instructionsList.forEach {
-        pointList.add(calculateNewCoordinate(pointList.last(), it))
+        pointList.addAll(calculateNextCoordinates(pointList.last(), it))
     }
 
     return pointList
 }
 
-fun calculateNewCoordinate(currentCoordinate: Point, move: String): Point {
+fun calculateNextCoordinates(currentCoordinate: Point, move: String): List<Point> {
     val moveDirection = move.first()
     val moveAmount = move.takeLast(move.count() - 1).toInt()
 
-    return when (moveDirection) {
-        Direction.RIGHT.direction -> Pair(currentCoordinate.first + moveAmount, currentCoordinate.second)
-        Direction.LEFT.direction -> Pair(currentCoordinate.first - moveAmount, currentCoordinate.second)
-        Direction.UP.direction -> Pair(currentCoordinate.first, currentCoordinate.second + moveAmount)
-        Direction.DOWN.direction -> Pair(currentCoordinate.first, currentCoordinate.second - moveAmount)
-        else -> Pair(0, 0)
+    val coordinatesVisited: MutableList<Point> = mutableListOf()
+
+    when (moveDirection) {
+        Direction.RIGHT.direction -> {
+            for (i in 1..moveAmount) {
+                coordinatesVisited.add(Point(currentCoordinate.first + i, currentCoordinate.second))
+            }
+        }
+
+        Direction.LEFT.direction -> {
+            for (i in 1..moveAmount) {
+                coordinatesVisited.add(Point(currentCoordinate.first - i, currentCoordinate.second))
+            }
+        }
+        Direction.UP.direction -> {
+            for (i in 1..moveAmount) {
+                coordinatesVisited.add(Point(currentCoordinate.first, currentCoordinate.second + i))
+            }
+        }
+
+        Direction.DOWN.direction -> {
+            for (i in 1..moveAmount) {
+                coordinatesVisited.add(Point(currentCoordinate.first, currentCoordinate.second - i))
+            }
+        }
+        else -> throw Exception("wtf")
     }
+
+    return coordinatesVisited
 }
 
 enum class Direction(val direction: Char) {
