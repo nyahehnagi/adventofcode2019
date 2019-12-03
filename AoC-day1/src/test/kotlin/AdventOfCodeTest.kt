@@ -9,14 +9,6 @@ import org.hamcrest.MatcherAssert.assertThat
 class AdventofcodeTest {
 
     @Test
-    fun `Should calculate the shortest distance of a list of points`() {
-        val coordinates =  listOf(Pair(0,0), Pair(20,20), Pair(10,10))
-
-        //assertThat(getShortestManhattanDistance(coordinates), equalTo(20))
-
-    }
-
-    @Test
     fun `Should test that a list of intersecting points is returned`() {
         val wire1Coords =  listOf(Pair(0,0), Pair(0,1))
         val wire2Coords = listOf(Pair(0,0),Pair(0,1))
