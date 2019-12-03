@@ -9,16 +9,61 @@ import org.hamcrest.MatcherAssert.assertThat
 class AdventofcodeTest {
 
     @Test
+    fun `Should calculate the shortest distance of a list of points`() {
+        val coordinates =  listOf(Pair(0,0), Pair(20,20), Pair(10,10))
+
+        //assertThat(getShortestManhattanDistance(coordinates), equalTo(20))
+
+    }
+
+    @Test
+    fun `Should test that a list of intersecting points is returned`() {
+        val wire1Coords =  listOf(Pair(0,0), Pair(20,20), Pair(10,10))
+        val wire2Coords = listOf(Pair(0,0),Pair(10,10), Pair(10,10))
+
+        //assertThat(getIntersectingPoints(wire1Coords,wire2Coords).count(), equalTo(2))
+
+    }
+
+    @Test
     fun `Should test the shortest manhatten distance for 2 wires that cross`() {
+        val wire5 =  "R8,U5,L5,D3"
+        val wire6 = "U7,R6,D4,L4"
         val wire1 = "R75,D30,R83,U83,L12,D49,R71,U7,L72"
         val wire2 = "U62,R66,U55,R34,D71,R55,D58,R83"
         val wire3 = "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
         val wire4 = "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"
 
-        assertThat(calculateManhattenDistance(wire1,wire2), equalTo(159))
-        assertThat(calculateManhattenDistance(wire3,wire4), equalTo(135))
+        assertThat(calculateManhattanDistance(wire5,wire6), equalTo(6))
+        assertThat(calculateManhattanDistance(wire1,wire2), equalTo(159))
+        assertThat(calculateManhattanDistance(wire3,wire4), equalTo(135))
     }
 
+    @Test
+    fun `Should test that a list of points is created for the wire instruction list`(){
+        val wireInstruction = "R1,U1,L1,D1"
+
+        assertThat(createListOfPoints(wireInstruction)[1], equalTo(Pair(1,0)))
+        assertThat(createListOfPoints(wireInstruction)[2], equalTo(Pair(1,1)))
+        assertThat(createListOfPoints(wireInstruction)[3], equalTo(Pair(0,1)))
+        assertThat(createListOfPoints(wireInstruction)[4], equalTo(Pair(0,0)))
+        assertThat(createListOfPoints(wireInstruction).count(), equalTo(5))
+    }
+
+    @Test
+    fun `Should test that a new point is returned when passed a single instruction`(){
+        val currentCoordinate = Pair (10,10)
+        val moveRight = "R20"
+        val moveLeft = "L20"
+        val moveUp = "U20"
+        val moveDown = "D50"
+
+        assertThat(calculateNewCoordinate(currentCoordinate,moveRight), equalTo(Pair(30,10)))
+        assertThat(calculateNewCoordinate(currentCoordinate,moveLeft), equalTo(Pair(-10,10)))
+        assertThat(calculateNewCoordinate(currentCoordinate,moveUp), equalTo(Pair(10,30)))
+        assertThat(calculateNewCoordinate(currentCoordinate,moveDown), equalTo(Pair(10,-40)))
+
+    }
 
     @Test
     fun `Should test that amount of fuel calculated is correct`() {
