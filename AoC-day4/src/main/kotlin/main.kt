@@ -1,10 +1,9 @@
-package AoCday4
+package aocday4
 
 fun main(){
-    println(calculateNumberOfPossiblePassword("245318","765747"))
+
 }
 
-fun calculateNumberOfPossiblePassword (startNumber : String, endNumber : String) : Int {
-    val startNumberArray = startNumber.split("").toTypedArray()
-
+fun calculatePossibleCombinations(startNumber : String, endNumber : String) : Int{
+    return 0
 }
