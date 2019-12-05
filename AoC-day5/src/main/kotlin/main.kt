@@ -14,8 +14,8 @@ fun getData(filename: String): List<String> {
 }
 
 
-fun testIntCode(intCodeString: String): Int {
-    return readIntCode(1, intCodeString)
+fun testIntCode(intCodeString: String) {
+     readIntCode(5, intCodeString)
 }
 
 enum class OpCode {
@@ -23,6 +23,10 @@ enum class OpCode {
     OPCODE2,
     OPCODE3,
     OPCODE4,
+    OPCODE5,
+    OPCODE6,
+    OPCODE7,
+    OPCODE8,
     OPCODE99,
     OPERROR
 }
@@ -33,7 +37,7 @@ data class InstructionParameters(
     val param3: Boolean = false
 )
 
-fun readIntCode(opCode3InputValue: Int, intCode: String): Int {
+fun readIntCode(opCode3InputValue: Int, intCode: String) {
     var intCodeList = intCode.split(",").toMutableList()
 
     var currentInstructionPointer = 0 //track where we are in the code
@@ -43,30 +47,19 @@ fun readIntCode(opCode3InputValue: Int, intCode: String): Int {
         val currentOpCode = getOpCode(currentInstructionPointer, intCodeList)
         val parameterModes = getParameterModes(currentInstructionPointer,intCodeList)
 
-        intCodeList = processOpCode(opCode3InputValue,currentOpCode,parameterModes,currentInstructionPointer,intCodeList)
-
-        currentInstructionPointer += calculateInstructionPointerIncrement(currentOpCode)
-
+        val retval = processOpCode(opCode3InputValue,currentOpCode,parameterModes,currentInstructionPointer,intCodeList)
+        intCodeList = retval.first
+        currentInstructionPointer = retval.second
     }
 
-    return 0
 }
 
-fun calculateInstructionPointerIncrement(opCode : OpCode) : Int {
-    return when (opCode) {
-        OpCode.OPCODE1,OpCode.OPCODE2 ->  4
-        OpCode.OPCODE3,OpCode.OPCODE4 ->  2
-        //tidy this up and work out how to do this properly - it's a fucking mess
-        OpCode.OPCODE99 -> throw Exception("Stop the program")
-        OpCode.OPERROR -> throw Exception("All gone tits up")
-    }
-}
-
-fun processOpCode(opCode3InputValue: Int, opCode: OpCode, parameterModes : InstructionParameters, index: Int, intCodeList: MutableList<String>): MutableList<String> {
+fun processOpCode(opCode3InputValue: Int, opCode: OpCode, parameterModes : InstructionParameters, index: Int, intCodeList: MutableList<String>): Pair<MutableList<String>, Int> {
 
     var firstValue : Int
     var secondValue : Int
     var thirdValue : Int
+    var newInstructionIndex: Int
 
     when (opCode) {
         OpCode.OPCODE1 -> {
@@ -74,27 +67,58 @@ fun processOpCode(opCode3InputValue: Int, opCode: OpCode, parameterModes : Instr
             secondValue = if (parameterModes.param2) intCodeList[index + 2].toInt() else  intCodeList[intCodeList[index + 2].toInt()].toInt()
             thirdValue = intCodeList[index + 3].toInt()
             intCodeList[thirdValue] = (firstValue + secondValue).toString()
+            newInstructionIndex = index + 4
+
         }
         OpCode.OPCODE2 -> {
             firstValue = if (parameterModes.param1) intCodeList[index + 1].toInt() else  intCodeList[intCodeList[index + 1].toInt()].toInt()
             secondValue = if (parameterModes.param2) intCodeList[index + 2].toInt() else  intCodeList[intCodeList[index + 2].toInt()].toInt()
             thirdValue = intCodeList[index + 3].toInt()
             intCodeList[thirdValue] = (firstValue * secondValue).toString()
+            newInstructionIndex = index + 4
         }
         OpCode.OPCODE3 -> {
             val indexToAssignOpsCode3 = intCodeList[index+1].toInt()
             intCodeList[indexToAssignOpsCode3] = opCode3InputValue.toString()
+            newInstructionIndex = index + 2
         }
         OpCode.OPCODE4 -> {
             val indexToExtractOutput = intCodeList[index+1].toInt()
             println(intCodeList[indexToExtractOutput])
+            newInstructionIndex = index + 2
         }
+        OpCode.OPCODE5 -> {
+            firstValue = if (parameterModes.param1) intCodeList[index + 1].toInt() else  intCodeList[intCodeList[index + 1].toInt()].toInt()
+            secondValue = if (parameterModes.param2) intCodeList[index + 2].toInt() else  intCodeList[intCodeList[index + 2].toInt()].toInt()
+            if (firstValue != 0) newInstructionIndex = secondValue else newInstructionIndex = index + 3
+        }
+        OpCode.OPCODE6 ->{
+            firstValue = if (parameterModes.param1) intCodeList[index + 1].toInt() else  intCodeList[intCodeList[index + 1].toInt()].toInt()
+            secondValue = if (parameterModes.param2) intCodeList[index + 2].toInt() else  intCodeList[intCodeList[index + 2].toInt()].toInt()
+            if (firstValue == 0) newInstructionIndex = secondValue else newInstructionIndex = index + 3
+
+        }
+        OpCode.OPCODE7 ->{
+            firstValue = if (parameterModes.param1) intCodeList[index + 1].toInt() else  intCodeList[intCodeList[index + 1].toInt()].toInt()
+            secondValue = if (parameterModes.param2) intCodeList[index + 2].toInt() else  intCodeList[intCodeList[index + 2].toInt()].toInt()
+            thirdValue = intCodeList[index + 3].toInt()
+            if (firstValue < secondValue) intCodeList[thirdValue] = "1" else intCodeList[thirdValue] = "0"
+            newInstructionIndex = index + 4
+        }
+        OpCode.OPCODE8 ->{
+            firstValue = if (parameterModes.param1) intCodeList[index + 1].toInt() else  intCodeList[intCodeList[index + 1].toInt()].toInt()
+            secondValue = if (parameterModes.param2) intCodeList[index + 2].toInt() else  intCodeList[intCodeList[index + 2].toInt()].toInt()
+            thirdValue = intCodeList[index + 3].toInt()
+            if (firstValue == secondValue) intCodeList[thirdValue] = "1" else intCodeList[thirdValue] = "0"
+            newInstructionIndex = index + 4
+        }
+
         //tidy this up and work out how to do this properly - it's a fucking mess
         OpCode.OPCODE99 -> throw Exception("Stop the program")
         OpCode.OPERROR -> throw Exception("All gone tits up")
     }
 
-    return intCodeList
+    return Pair(intCodeList,newInstructionIndex)
 }
 
 // so need to refactor this
@@ -146,6 +170,10 @@ fun getOpCode(index: Int, intCodeList: List<String>): OpCode {
         "02", "2" -> OpCode.OPCODE2
         "03", "3" -> OpCode.OPCODE3
         "04", "4" -> OpCode.OPCODE4
+        "05", "5" -> OpCode.OPCODE5
+        "06", "6" -> OpCode.OPCODE6
+        "07", "7" -> OpCode.OPCODE7
+        "08", "8" -> OpCode.OPCODE8
         "99" -> OpCode.OPCODE99
         else -> OpCode.OPERROR
 

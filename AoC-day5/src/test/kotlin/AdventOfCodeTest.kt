@@ -51,9 +51,10 @@ class AdventofcodeTest {
         val params = InstructionParameters(param2 = true)
         val index1 = 0
 
-        assertThat(processOpCode(0,opCode,params,index1,intCode1), equalTo(mutableListOf("1002","4","3","4","99")))
+        "3","12","6","12","15","1","13","14","13","4","13","99","-1","0","1","9"
+
+        assertThat(processOpCode(0,opCode,params,index1,intCode1).first, equalTo(mutableListOf("1002","4","3","4","99")))
 
     }
-
 
 }
