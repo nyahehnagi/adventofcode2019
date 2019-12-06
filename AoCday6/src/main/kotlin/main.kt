@@ -26,7 +26,7 @@ fun getData(filename: String): List<String> {
 class SpaceObjectMap {
 
     var universalCentreOfMass = SpaceObject("COM")
-    var allObjects: List<String> = listOf<String>()
+    var allUniqueSpaceObjectsByName: List<String> = listOf()
 
     fun createObjectMap(orbitData: List<String>) {
         val tmpObject: MutableList<String> = mutableListOf()
@@ -34,28 +34,25 @@ class SpaceObjectMap {
 
         universalCentreOfMass.buildObjectMap(tmpOrbitData)
 
+        //Getting a list of all celestial bodies as will use this data later - not a great idea and no doubt there's a way to recurse through each SpaceObject
         orbitData.forEach {
             val parts = it.split(")")
             val spaceObjectName = parts[0]
             val tmpSpaceObjectOrbitedBy = parts[1]
             tmpObject.add(spaceObjectName)
             tmpObject.add(tmpSpaceObjectOrbitedBy)
-
-
         }
-        //terrible idea this.. need to get my head around recursing
-        allObjects = tmpObject.toList().distinctBy { it }
+        allUniqueSpaceObjectsByName = tmpObject.toList().distinctBy { it }
 
     }
 
     fun countOrbits(): Int {
         //TODO think of a better way to go through the different objects rather than this foreach aka traverse the tree properly
         var counter: Int = 0
-        allObjects.forEach {
-            counter += universalCentreOfMass.countOrbits(it)
-
+        allUniqueSpaceObjectsByName.forEach {
+            counter += universalCentreOfMass.countNodes(it) - 1 // -1 because the node count is greater than the orbit count by 1 due to the counting of the the "COM" object
         }
-        return counter - allObjects.count() // this is because I have a bug in my recursion and I could all the objects
+        return counter
     }
 
     fun getShortestOrbitalTransfers(start: String, end: String): Int {
@@ -64,6 +61,7 @@ class SpaceObjectMap {
 
         val tmpList: MutableList<String> = mutableListOf()
         // There's probably a way to use maps and what not here. Need to learn more in this area
+        // remove any matching SpaceObjects less the start and end objects and we have our shortest route
         startTotalOrbitsToCOM.forEach {
             if (!endTotalOrbitsToCOM.contains(it)) {
                 tmpList.add(it)
@@ -75,10 +73,10 @@ class SpaceObjectMap {
             }
         }
 
-        tmpList.remove(start) // I actually have 2 of these in the list.. something wrong with my recursion again
-        tmpList.remove(end) // I actually have 2 of these in the list.. something wrong with my recursion again
+        tmpList.remove(start)
+        tmpList.remove(end)
 
-        return tmpList.count() - 2 // minus 2 because I removed the intersecting node - horrible heh
+        return tmpList.count()
     }
 }
 
@@ -98,14 +96,14 @@ data class SpaceObject(
             objectDirectOrbitedBy.forEach {
                 val retval = it.getTotalOrbitsForObject(name)
                 if (retval.isNotEmpty()) {
-                    return retval + listOf(it.spaceObjectName)
+                    return if (retval[0] == it.spaceObjectName) retval else retval + listOf(it.spaceObjectName)
                 }
             }
         }
         return emptyList()
     }
 
-    fun countOrbits(name: String): Int {
+    fun countNodes(name: String): Int {
         if (spaceObjectName == name) {
             return 1
         }
@@ -114,14 +112,16 @@ data class SpaceObject(
             return 0
         } else {
             objectDirectOrbitedBy.forEach {
-                val retval = it.countOrbits(name)
-                if (retval != 0) return retval + 1
+                val retval = it.countNodes(name)
+                if (retval != 0) {
+                    return retval + 1
+                }
             }
+            return 0
         }
-        return 0
     }
 
-    fun buildObjectMap(orbitData: MutableList<String>) {
+    fun buildObjectMap(orbitData: List<String>) {
         val tmpOrbitData: MutableList<String> = orbitData.toMutableList()
 
         orbitData.forEach {
