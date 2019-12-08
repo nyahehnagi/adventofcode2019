@@ -79,7 +79,7 @@ class Image(_width : Int, _height : Int, imageString : String){
 
         var visible : String = ""
         for (i in 0..layerList[0].layerData.lastIndex){
-            visible = visible + getVisibleColour(0,i).toString()
+            visible += getVisibleColour(0,i).toString()
         }
 
         return visible
