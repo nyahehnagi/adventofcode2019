@@ -16,7 +16,6 @@ fun main(){
 
 
     val output :String = image.getPart2()
-    output.replace("1","X")
     var index = 0
     while (index < output.count()) {
         println(output.substring(index, index + (25)).replace("1","X").replace("0"," "))
