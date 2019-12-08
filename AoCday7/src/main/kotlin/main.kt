@@ -82,7 +82,7 @@ class Processor {
     val inputD: MutableList<Int> = mutableListOf()
     val inputE: MutableList<Int> = mutableListOf()
 
-    fun clearInputOutput() {
+    fun clearInputLists() {
         inputA.clear()
         inputB.clear()
         inputC.clear()
@@ -93,7 +93,7 @@ class Processor {
 
     fun singleLoop(phaseList: List<Int>, intCodeString: String): Int {
 
-        clearInputOutput()
+        clearInputLists()
 
         inputA.add(phaseList[0])
         inputA.add(0)
@@ -108,18 +108,18 @@ class Processor {
         val instructionD = InstructionProcessor(0, intCodeString.split(",").toMutableList())
         val instructionE = InstructionProcessor(0, intCodeString.split(",").toMutableList())
 
-        instructionA.readIntCode(inputA, inputB)
-        instructionB.readIntCode(inputB, inputC)
-        instructionC.readIntCode(inputC, inputD)
-        instructionD.readIntCode(inputD, inputE)
-        instructionE.readIntCode(inputE, inputA)
+        instructionA.processIntCode(inputA, inputB)
+        instructionB.processIntCode(inputB, inputC)
+        instructionC.processIntCode(inputC, inputD)
+        instructionD.processIntCode(inputD, inputE)
+        instructionE.processIntCode(inputE, inputA)
 
         return instructionE.internalOutputList.last()
     }
 
     fun feedbackLoop(phaseList: List<Int>, intCodeString: String): Int {
 
-        clearInputOutput()
+        clearInputLists()
 
         inputA.add(phaseList[0])
         inputA.add(0)
@@ -136,23 +136,23 @@ class Processor {
 
         do {
             if (!instructionA.haltProgam) {
-                instructionA.readIntCode(inputA, inputB)
+                instructionA.processIntCode(inputA, inputB)
             }
 
             if (!instructionB.haltProgam) {
-                instructionB.readIntCode(inputB, inputC)
+                instructionB.processIntCode(inputB, inputC)
             }
 
             if (!instructionC.haltProgam) {
-                instructionC.readIntCode(inputC, inputD)
+                instructionC.processIntCode(inputC, inputD)
             }
 
             if (!instructionD.haltProgam) {
-                instructionD.readIntCode(inputD, inputE)
+                instructionD.processIntCode(inputD, inputE)
             }
 
             if (!instructionE.haltProgam) {
-                instructionE.readIntCode(inputE, inputA)
+                instructionE.processIntCode(inputE, inputA)
             }
 
         } while (!instructionE.haltProgam)
@@ -176,6 +176,12 @@ enum class OpCode {
     OPERROR
 }
 
+enum class ReturnCode{
+    UNKNOWN,
+    WAITING,
+    END
+}
+
 data class InstructionParameters(
     val param1: Boolean = false,
     val param2: Boolean = false,
@@ -185,37 +191,37 @@ data class InstructionParameters(
 class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
 
     val internalOutputList: MutableList<Int> = mutableListOf()
-    val currentIntCode: MutableList<String> = mutableListOf()
+    val currentIntCode: MutableList<String>
     var haltProgam: Boolean = false
     var waiting: Boolean = false
-    var currentInstructionPointer = 0
+    var instructionPointer = 0
 
     init {
-        currentInstructionPointer = index
-        currentIntCode.addAll(intCodeList)
+        instructionPointer = index
+        currentIntCode = intCodeList.toMutableList()
     }
 
-    fun readIntCode(
+    fun processIntCode(
         inputList: MutableList<Int>,
         outputList: MutableList<Int>
-    ): Int {
+    ): ReturnCode {
 
-        while (currentInstructionPointer <= currentIntCode.lastIndex) {
+        while (instructionPointer <= currentIntCode.lastIndex) {
 
-            val currentOpCode = getOpCode(currentInstructionPointer, currentIntCode)
-            val parameterModes = getParameterModes(currentInstructionPointer, currentIntCode)
+            val currentOpCode = getOpCode(instructionPointer, currentIntCode)
+            val parameterModes = getParameterModes(instructionPointer, currentIntCode)
 
             processOpCode(inputList, outputList, currentOpCode, parameterModes)
 
             if (waiting) {
-                return 2
+                return ReturnCode.WAITING
             }
             if (haltProgam) {
-                return 0
+                return ReturnCode.END
             }
         }
 
-        return 1
+        return ReturnCode.UNKNOWN
     }
 
     fun processOpCode(
@@ -225,38 +231,38 @@ class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
         parameterModes: InstructionParameters
     ) {
 
-        var firstValue: Int
-        var secondValue: Int
-        var thirdValue: Int
-        var outputValue = 0
+        val firstValue: Int
+        val secondValue: Int
+        val thirdValue: Int
+        val outputValue : Int
 
         when (opCode) {
             OpCode.OPCODE1 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[currentInstructionPointer + 1].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[currentInstructionPointer + 2].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 2].toInt()].toInt()
-                thirdValue = currentIntCode[currentInstructionPointer + 3].toInt()
+                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                thirdValue = currentIntCode[instructionPointer + 3].toInt()
                 currentIntCode[thirdValue] = (firstValue + secondValue).toString()
-                currentInstructionPointer += 4
+                instructionPointer += 4
 
             }
             OpCode.OPCODE2 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[currentInstructionPointer + 1].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[currentInstructionPointer + 2].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 2].toInt()].toInt()
-                thirdValue = currentIntCode[currentInstructionPointer + 3].toInt()
+                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                thirdValue = currentIntCode[instructionPointer + 3].toInt()
                 currentIntCode[thirdValue] = (firstValue * secondValue).toString()
-                currentInstructionPointer += 4
+                instructionPointer += 4
             }
             OpCode.OPCODE3 -> {
-                val indexToAssignOpsCode3 = currentIntCode[currentInstructionPointer + 1].toInt()
+                val indexToAssignOpsCode3 = currentIntCode[instructionPointer + 1].toInt()
 
                 if (inputList.size > 0) {
                     currentIntCode[indexToAssignOpsCode3] = inputList[0].toString()
                     inputList.removeAt(0)
-                    currentInstructionPointer += 2
+                    instructionPointer += 2
                     waiting = false
                 } else {
                     waiting = true
@@ -264,44 +270,44 @@ class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
 
             }
             OpCode.OPCODE4 -> {
-                val indexToExtractOutput = currentIntCode[currentInstructionPointer + 1].toInt()
+                val indexToExtractOutput = currentIntCode[instructionPointer + 1].toInt()
                 outputValue = currentIntCode[indexToExtractOutput].toInt()
                 outputList.add(outputValue)
                 internalOutputList.add(outputValue)
-                currentInstructionPointer += 2
+                instructionPointer += 2
             }
             OpCode.OPCODE5 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[currentInstructionPointer + 1].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[currentInstructionPointer + 2].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 2].toInt()].toInt()
-                if (firstValue != 0) currentInstructionPointer = secondValue else currentInstructionPointer += 3
+                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                if (firstValue != 0) instructionPointer = secondValue else instructionPointer += 3
             }
             OpCode.OPCODE6 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[currentInstructionPointer + 1].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[currentInstructionPointer + 2].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 2].toInt()].toInt()
-                if (firstValue == 0) currentInstructionPointer = secondValue else currentInstructionPointer += 3
+                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                if (firstValue == 0) instructionPointer = secondValue else instructionPointer += 3
 
             }
             OpCode.OPCODE7 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[currentInstructionPointer + 1].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[currentInstructionPointer + 2].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 2].toInt()].toInt()
-                thirdValue = currentIntCode[currentInstructionPointer + 3].toInt()
+                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                thirdValue = currentIntCode[instructionPointer + 3].toInt()
                 if (firstValue < secondValue) currentIntCode[thirdValue] = "1" else currentIntCode[thirdValue] = "0"
-                currentInstructionPointer += 4
+                instructionPointer += 4
             }
             OpCode.OPCODE8 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[currentInstructionPointer + 1].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[currentInstructionPointer + 2].toInt() else currentIntCode[currentIntCode[currentInstructionPointer + 2].toInt()].toInt()
-                thirdValue = currentIntCode[currentInstructionPointer + 3].toInt()
+                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                thirdValue = currentIntCode[instructionPointer + 3].toInt()
                 if (firstValue == secondValue) currentIntCode[thirdValue] = "1" else currentIntCode[thirdValue] = "0"
-                currentInstructionPointer += 4
+                instructionPointer += 4
             }
 
             OpCode.OPCODE99 -> {
@@ -315,7 +321,7 @@ class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
     // so need to refactor this
     fun getParameterModes(index: Int, intCodeList: List<String>): InstructionParameters {
 
-        var paramCode: String
+        val paramCode: String
         if (intCodeList[index].length > 2) {
             paramCode = intCodeList[index].take(intCodeList[index].length - 2)
 
