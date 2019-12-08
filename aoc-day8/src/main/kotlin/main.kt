@@ -11,8 +11,17 @@ fun main(){
 
     val image  = Image(25,6, getData("src/main/resources/day8inputdata.txt")[0])
     //val image = Image(3,2, "123456789012")
+    //val image = Image(2,2,"0222112222120000")
     println(image.getPart1())
 
+
+    val output :String = image.getPart2()
+    output.replace("1","X")
+    var index = 0
+    while (index < output.count()) {
+        println(output.substring(index, index + (25)).replace("1","X").replace("0"," "))
+        index +=  25
+    }
 
 }
 
@@ -67,10 +76,23 @@ class Image(_width : Int, _height : Int, imageString : String){
         return minLayer
     }
 
-    fun getPart2(){
+    fun getPart2(): String{
 
+        var visible : String = ""
+        for (i in 0..layerList[0].layerData.lastIndex){
+            visible = visible + getVisibleColour(0,i).toString()
+        }
+
+        return visible
     }
 
+
+    fun getVisibleColour(layerNumber : Int, layerIndex : Int) : Int {
+        if (layerList[layerNumber].layerData[layerIndex] == 0 || layerList[layerNumber].layerData[layerIndex] == 1)
+            return layerList[layerNumber].layerData[layerIndex]
+        else
+            return getVisibleColour (layerNumber + 1, layerIndex)
+    }
 
     fun getPart1 (): Int{
         val indexOfLayerWithFewestZeros = getLayerWithLeastNumberOfDigits(0)
