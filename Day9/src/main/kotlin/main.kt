@@ -1,4 +1,4 @@
-package aocday7
+package aocday9
 
 import java.io.File
 import java.lang.Exception
@@ -11,8 +11,8 @@ fun main() {
     //println(processor.crackTheIntCodePart2("3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"))
     //println(processor.crackTheIntCodePart2("3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10"))
 
-    println(crackTheIntCodePart1(getData("src/main/resources/day6input.csv")[0]))
-    println(crackTheIntCodePart2(getData("src/main/resources/day6input.csv")[0]))
+    println(crackTheIntCodePart1(getData("src/main/resources/day6inputdata.txt")[0]))
+    println(crackTheIntCodePart2(getData("src/main/resources/day6inputdata.txt")[0]))
 
 }
 
@@ -182,10 +182,15 @@ enum class ReturnCode{
     END
 }
 
+enum class ParameterType{
+    POSITION,
+    IMMEDIATE,
+    RELATIVE
+}
 data class InstructionParameters(
-    val param1: Boolean = false,
-    val param2: Boolean = false,
-    val param3: Boolean = false
+    val param1: ParameterType = ParameterType.POSITION,
+    val param2: ParameterType = ParameterType.POSITION,
+    val param3: ParameterType = ParameterType.POSITION
 )
 
 class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
@@ -239,9 +244,9 @@ class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
         when (opCode) {
             OpCode.OPCODE1 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                    if (parameterModes.param2 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
                 thirdValue = currentIntCode[instructionPointer + 3].toInt()
                 currentIntCode[thirdValue] = (firstValue + secondValue).toString()
                 instructionPointer += 4
@@ -249,9 +254,9 @@ class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
             }
             OpCode.OPCODE2 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                    if (parameterModes.param2 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
                 thirdValue = currentIntCode[instructionPointer + 3].toInt()
                 currentIntCode[thirdValue] = (firstValue * secondValue).toString()
                 instructionPointer += 4
@@ -278,33 +283,33 @@ class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
             }
             OpCode.OPCODE5 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                    if (parameterModes.param2 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
                 if (firstValue != 0) instructionPointer = secondValue else instructionPointer += 3
             }
             OpCode.OPCODE6 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                    if (parameterModes.param2 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
                 if (firstValue == 0) instructionPointer = secondValue else instructionPointer += 3
 
             }
             OpCode.OPCODE7 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                    if (parameterModes.param2 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
                 thirdValue = currentIntCode[instructionPointer + 3].toInt()
                 if (firstValue < secondValue) currentIntCode[thirdValue] = "1" else currentIntCode[thirdValue] = "0"
                 instructionPointer += 4
             }
             OpCode.OPCODE8 -> {
                 firstValue =
-                    if (parameterModes.param1) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
+                    if (parameterModes.param1 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 1].toInt() else currentIntCode[currentIntCode[instructionPointer + 1].toInt()].toInt()
                 secondValue =
-                    if (parameterModes.param2) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
+                    if (parameterModes.param2 == ParameterType.IMMEDIATE) currentIntCode[instructionPointer + 2].toInt() else currentIntCode[currentIntCode[instructionPointer + 2].toInt()].toInt()
                 thirdValue = currentIntCode[instructionPointer + 3].toInt()
                 if (firstValue == secondValue) currentIntCode[thirdValue] = "1" else currentIntCode[thirdValue] = "0"
                 instructionPointer += 4
@@ -325,31 +330,35 @@ class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
         if (intCodeList[index].length > 2) {
             paramCode = intCodeList[index].take(intCodeList[index].length - 2)
 
-            var param1 = false
-            var param2 = false
-            var param3 = false
+            var param1 = ParameterType.POSITION
+            var param2 = ParameterType.POSITION
+            var param3 = ParameterType.POSITION
+
+
+
+
 
             when (paramCode.length) {
-                1 -> return InstructionParameters(param1 = true)
+                1 -> return InstructionParameters(param1 = ParameterType.IMMEDIATE)
                 2 -> {
                     if (paramCode[1] == '1') {
-                        param1 = true
+                        param1 = ParameterType.IMMEDIATE
                     }
                     if (paramCode[0] == '1') {
-                        param2 = true
+                        param2 = ParameterType.IMMEDIATE
                     }
                     return InstructionParameters(param1, param2)
                 }
 
                 3 -> {
                     if (paramCode[2] == '1') {
-                        param1 = true
+                        param1 = ParameterType.IMMEDIATE
                     }
                     if (paramCode[1] == '1') {
-                        param2 = true
+                        param2 = ParameterType.IMMEDIATE
                     }
                     if (paramCode[0] == '1') {
-                        param3 = true
+                        param3 = ParameterType.IMMEDIATE
                     }
                     return InstructionParameters(param1, param2, param3)
                 }
@@ -377,3 +386,4 @@ class InstructionProcessor(index: Int, intCodeList: MutableList<String>) {
         }
     }
 }
+
