@@ -14,9 +14,11 @@ fun day9 (intCodeString: String) {
     val computer = Computer()
 
     computer.singleCall(1,intCodeString)
+    println(computer.returnCode)
     println(computer.output)
     computer.clearInputOutput()
     computer.singleCall(2,intCodeString)
+    println(computer.returnCode)
     println(computer.output)
 }
 
@@ -29,6 +31,7 @@ class Computer {
 
     val input: MutableList<Long> = mutableListOf()
     val output: MutableList<Long> = mutableListOf()
+    var returnCode  = ReturnCode.UNKNOWN
 
     fun clearInputOutput() {
         input.clear()
@@ -38,23 +41,24 @@ class Computer {
     fun singleCall(inputCode : Long, intCodeString: String) {
         val instruction = InstructionProcessor(0L, intCodeString.split(",").toMutableList())
         input.add(inputCode)
-        instruction.processIntCode(input,output )
+        returnCode = instruction.processIntCode(input,output)
     }
 }
 
 class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
 
-    val internalOutputList: MutableList<Long> = mutableListOf()
-    val instructionMemory: MutableMap<Long, String> = mutableMapOf()
     var haltProgam: Boolean = false
     var waiting: Boolean = false
-    var instructionPointer: Long = 0L
-    var relativeBase: Long = 0
+
+    private val internalOutputList: MutableList<Long> = mutableListOf()
+    private val instructionMemory: MutableMap<Long, String> = mutableMapOf()
+    private var instructionPointer: Long = 0L
+    private var relativeBase: Long = 0
 
     init {
         instructionPointer = index
-        intCodeList.toMutableList().forEachIndexed() { index, singleInstruction ->
-            instructionMemory[index.toLong()] =
+        intCodeList.toMutableList().forEachIndexed() { i, singleInstruction ->
+            instructionMemory[i.toLong()] =
                 singleInstruction
         }
     }
@@ -81,7 +85,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         return ReturnCode.UNKNOWN
     }
 
-    fun processOpCode(
+    private fun processOpCode(
         inputList: MutableList<Long>,
         outputList: MutableList<Long>,
         opCode: OpCode,
@@ -99,7 +103,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
                 secondValue = getSecondInstructionValue(parameterModes)
                 thirdValue = getThirdInstructionValue(parameterModes)
                 assignValueToMemory(thirdValue, (firstValue + secondValue).toString())
-                instructionPointer += 4
+                instructionPointer += OpCode.OPCODE1.increment
 
             }
             OpCode.OPCODE2 -> {
@@ -107,7 +111,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
                 secondValue = getSecondInstructionValue(parameterModes)
                 thirdValue = getThirdInstructionValue(parameterModes)
                 assignValueToMemory(thirdValue, (firstValue * secondValue).toString())
-                instructionPointer += 4
+                instructionPointer += OpCode.OPCODE2.increment
             }
             OpCode.OPCODE3 -> {
 
@@ -120,7 +124,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
                 if (inputList.size > 0) {
                     assignValueToMemory(indexToAssignOpsCode3, inputList[0].toString())
                     inputList.removeAt(0)
-                    instructionPointer += 2
+                    instructionPointer += OpCode.OPCODE3.increment
                     waiting = false
                 } else {
                     waiting = true
@@ -128,21 +132,20 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
 
             }
             OpCode.OPCODE4 -> {
-                firstValue = getfirstInstructionValue(parameterModes)
-                outputValue = firstValue
+                outputValue = getfirstInstructionValue(parameterModes)
                 outputList.add(outputValue)
                 internalOutputList.add(outputValue)
-                instructionPointer += 2
+                instructionPointer += OpCode.OPCODE4.increment
             }
             OpCode.OPCODE5 -> {
                 firstValue = getfirstInstructionValue(parameterModes)
                 secondValue = getSecondInstructionValue(parameterModes)
-                if (firstValue != 0L) instructionPointer = secondValue else instructionPointer += 3
+                if (firstValue != 0L) instructionPointer = secondValue else instructionPointer += OpCode.OPCODE5.increment
             }
             OpCode.OPCODE6 -> {
                 firstValue = getfirstInstructionValue(parameterModes)
                 secondValue = getSecondInstructionValue(parameterModes)
-                if (firstValue == 0L) instructionPointer = secondValue else instructionPointer += 3
+                if (firstValue == 0L) instructionPointer = secondValue else instructionPointer +=  OpCode.OPCODE6.increment
 
             }
             OpCode.OPCODE7 -> {
@@ -150,19 +153,19 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
                 secondValue = getSecondInstructionValue(parameterModes)
                 thirdValue = getThirdInstructionValue(parameterModes)
                 if (firstValue < secondValue) assignValueToMemory(thirdValue, "1") else assignValueToMemory(thirdValue, "0")
-                instructionPointer += 4
+                instructionPointer +=  OpCode.OPCODE7.increment
             }
             OpCode.OPCODE8 -> {
                 firstValue = getfirstInstructionValue(parameterModes)
                 secondValue = getSecondInstructionValue(parameterModes)
                 thirdValue = getThirdInstructionValue(parameterModes)
                 if (firstValue == secondValue) assignValueToMemory(thirdValue, "1") else assignValueToMemory(thirdValue, "0")
-                instructionPointer += 4
+                instructionPointer += OpCode.OPCODE8.increment
             }
             OpCode.OPCODE9 -> {
                 firstValue = getfirstInstructionValue(parameterModes)
                 relativeBase += firstValue
-                instructionPointer += 2
+                instructionPointer += OpCode.OPCODE9.increment
             }
 
             OpCode.OPCODE99 -> {
@@ -172,19 +175,19 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         }
     }
 
-    fun assignValueToMemory(key: Long, value: String) {
+    private fun assignValueToMemory(key: Long, value: String) {
         if (instructionMemory.containsKey(key)) instructionMemory[key] = value
         else instructionMemory[key] = value
     }
 
     //Checks to see if a key(memory address exists), if not, it creates one with value zero
-    fun doesKeyExistIfNotCreate(key: Long)  {
+    private fun doesKeyExistIfNotCreate(key: Long)  {
         if (instructionMemory.containsKey(key)) //Do nothing
         else
             instructionMemory[key] = "0"
     }
 
-    fun getfirstInstructionValue(parameterModes: InstructionParameters): Long {
+    private fun getfirstInstructionValue(parameterModes: InstructionParameters): Long {
 
         val firstParameterPointer = instructionPointer + 1
         doesKeyExistIfNotCreate(firstParameterPointer)
@@ -201,7 +204,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         }
     }
 
-    fun getSecondInstructionValue(parameterModes: InstructionParameters): Long {
+    private fun getSecondInstructionValue(parameterModes: InstructionParameters): Long {
 
         val secondParameterPointer = instructionPointer + 2
         doesKeyExistIfNotCreate(secondParameterPointer)
@@ -219,21 +222,20 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         }
     }
 
-    fun getThirdInstructionValue(parameterModes: InstructionParameters): Long {
+    private fun getThirdInstructionValue(parameterModes: InstructionParameters): Long {
 
         val thirdParameterPointer = instructionPointer + 3
-        doesKeyExistIfNotCreate(thirdParameterPointer)
 
         return when (parameterModes.param3) {
             ParameterType.RELATIVE -> {
                 instructionMemory[thirdParameterPointer]!!.toLong() + relativeBase
             }
-            else -> instructionMemory[thirdParameterPointer]!!.toLong() //Can only otherwise be in Immediate as per spec
+            else -> instructionMemory[thirdParameterPointer]!!.toLong() //otherwise is Immediate as per spec
         }
     }
 
-    // so need to refactor this
-    fun getParameterModes(index: Long): InstructionParameters {
+    //TODO refactor this
+    private fun getParameterModes(index: Long): InstructionParameters {
 
         val paramCode: String
 
@@ -279,7 +281,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         return InstructionParameters()
     }
 
-    fun getOpCode(index: Long): OpCode {
+    private fun getOpCode(index: Long): OpCode {
 
         val opCodeValue = instructionMemory[index]!!.takeLast(2)
         return when (opCodeValue) {
@@ -297,20 +299,32 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
 
         }
     }
-}
+    //nested class
+    enum class OpCode (val increment : Int) {
+        OPCODE1(4),
+        OPCODE2(4),
+        OPCODE3(2),
+        OPCODE4(2),
+        OPCODE5(3),
+        OPCODE6(3),
+        OPCODE7(4),
+        OPCODE8(4),
+        OPCODE9(2),
+        OPCODE99(0),
+        OPERROR(0)
+    }
 
-enum class OpCode {
-    OPCODE1,
-    OPCODE2,
-    OPCODE3,
-    OPCODE4,
-    OPCODE5,
-    OPCODE6,
-    OPCODE7,
-    OPCODE8,
-    OPCODE9,
-    OPCODE99,
-    OPERROR
+    enum class ParameterType {
+        POSITION,
+        IMMEDIATE,
+        RELATIVE
+    }
+
+    data class InstructionParameters(
+        val param1: ParameterType = ParameterType.POSITION,
+        val param2: ParameterType = ParameterType.POSITION,
+        val param3: ParameterType = ParameterType.POSITION
+    )
 }
 
 enum class ReturnCode {
@@ -318,15 +332,3 @@ enum class ReturnCode {
     WAITING,
     END
 }
-
-enum class ParameterType {
-    POSITION,
-    IMMEDIATE,
-    RELATIVE
-}
-
-data class InstructionParameters(
-    val param1: ParameterType = ParameterType.POSITION,
-    val param2: ParameterType = ParameterType.POSITION,
-    val param3: ParameterType = ParameterType.POSITION
-)
