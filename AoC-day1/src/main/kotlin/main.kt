@@ -24,6 +24,9 @@ fun getData(filename: String): List<String> {
     return data.readLines()
 }
 
+
+
+
 fun calculateManhattanDistance(firstWire: String, secondWire: String): Int {
     val wire1Points = createListOfPoints(firstWire)
     val wire2Points = createListOfPoints(secondWire)
