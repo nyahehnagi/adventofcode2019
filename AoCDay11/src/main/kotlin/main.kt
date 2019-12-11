@@ -34,6 +34,12 @@ data class Paint(
     val timesPainted : Int
 )
 
+enum class Direction{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+}
 class PaintingRobot {
 
     val hullGrid: MutableMap<Coordinate, Paint> = mutableMapOf()
@@ -42,6 +48,7 @@ class PaintingRobot {
     fun paintSquare(intCodeString: String) {
 
         var currentPosition = Coordinate(0,0)
+        var facing : Direction = Direction.UP
 
         computer.clearInputOutput()
         computer.runProgram(0, intCodeString)
@@ -58,11 +65,13 @@ class PaintingRobot {
         println(computer.output)
     }
 
-    fun moveRobot(currentPosition : Coordinate, move : Long): Coordinate{
+    fun moveRobot(currentPosition : Coordinate, currentDirection: Direction, move : Long): Coordinate{
+        // tunr left 90
         if (move == 0L){
 
         }
 
+        //turn right 90
         if (move == 1L) {
 
         }
