@@ -53,6 +53,7 @@ class PaintingRobot {
         computer.clearInputOutput()
         computer.runProgram(0, intCodeString)
         do {
+            // need to convert longs
             val paintColour : Long = computer.output[computer.output.lastIndex-1]
             val move : Long = computer.output.last()
 
@@ -66,9 +67,12 @@ class PaintingRobot {
     }
 
     fun moveRobot(currentPosition : Coordinate, currentDirection: Direction, move : Long): Coordinate{
-        // tunr left 90
+        // turn left 90
         if (move == 0L){
+            return when (currentDirection){
+                Direction.UP -> Coordinate()
 
+            }
         }
 
         //turn right 90
