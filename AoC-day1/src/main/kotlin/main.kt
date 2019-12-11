@@ -24,9 +24,6 @@ fun getData(filename: String): List<String> {
     return data.readLines()
 }
 
-
-
-
 fun calculateManhattanDistance(firstWire: String, secondWire: String): Int {
     val wire1Points = createListOfPoints(firstWire)
     val wire2Points = createListOfPoints(secondWire)
@@ -56,7 +53,6 @@ fun getIntersectingPoints(wire1Points: List<Point>, wire2Points: List<Point>): L
             intersectingPointsList.add(Triple(point, index, wire2Points.indexOf(point)))
         }
     }
-
     return intersectingPointsList
 }
 

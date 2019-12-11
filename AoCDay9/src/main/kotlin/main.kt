@@ -54,8 +54,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
     init {
         instructionPointer = index
         intCodeList.toMutableList().forEachIndexed() { index, singleInstruction ->
-            instructionMemory[index.toLong()] =
-                singleInstruction
+            instructionMemory[index.toLong()] = singleInstruction
         }
     }
 
@@ -173,8 +172,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
     }
 
     fun assignValueToMemory(key: Long, value: String) {
-        if (instructionMemory.containsKey(key)) instructionMemory[key] = value
-        else instructionMemory[key] = value
+         instructionMemory[key] = value
     }
 
     //Checks to see if a key(memory address exists), if not, it creates one with value zero
