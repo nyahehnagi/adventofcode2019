@@ -1,25 +1,44 @@
-package aocday9
+package aocday11
 
 import java.io.File
 import java.lang.Exception
+import java.lang.*
+import java.lang.Integer.max
 
 fun main() {
     //val intCodeDay9Test1 = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"
     //val intCodeDay9Test1 = "1102,34915192,34915192,7,4,7,99,0"
     //val intCodeDay9Test1 = "104,1125899906842624,99"
-    day9(getData("src/main/resources/day9inputdata.txt")[0])
+    day11(getData("src/main/resources/day11inputdata.csv")[0])
+
+
 }
 
-fun day9 (intCodeString: String) {
-    val computer = Computer()
+fun day11(intCodeString: String) {
+    val paintingRobot = PaintingRobot()
 
-    computer.singleCall(1,intCodeString)
-    println(computer.returnCode)
-    println(computer.output)
-    computer.clearInputOutput()
-    computer.singleCall(2,intCodeString)
-    println(computer.returnCode)
-    println(computer.output)
+    paintingRobot.paintSquares(intCodeString)
+    println (paintingRobot.hullGrid.filter { it.value.timesPainted >0 }.count())
+
+    val Coords = paintingRobot.hullGrid.keys.toList()
+    var xMax : Int = 0
+    var yMax : Int = 0
+    Coords.forEach {
+        if (xMax < it.xAxis) xMax = it.xAxis
+        if (yMax < it.yAxis) yMax = it.yAxis
+    }
+    var registration : String = ""
+    for (x in 0..xMax){
+        for (y in 0..yMax){
+            if (paintingRobot.hullGrid.containsKey(Coordinate(x,y)))
+                registration = registration + paintingRobot.hullGrid[Coordinate(x,y)]!!.colour
+            else
+                registration = registration + "0"
+        }
+        registration += "\n"
+    }
+
+    println(registration.replace("0"," ").replace("1", "X"))
 }
 
 fun getData(filename: String): List<String> {
@@ -27,21 +46,163 @@ fun getData(filename: String): List<String> {
     return data.readLines()
 }
 
-class Computer {
+data class Coordinate(
+    val xAxis: Int,
+    val yAxis: Int
+)
+
+data class RobotPosition(
+    val coordinate: Coordinate,
+    val directionFacing: Direction
+)
+
+data class Paint(
+    var colour: Long,
+    var timesPainted: Int
+)
+
+enum class Direction {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+}
+
+class PaintingRobot {
+
+    var hullGrid: MutableMap<Coordinate, Paint> = mutableMapOf()
+    val computer: Computer = Computer()
+    var currentPosition = RobotPosition(Coordinate(0, 0), Direction.UP)
+
+    fun paintSquares(intCodeString: String) {
+        try {
+
+            hullGrid.putIfAbsent(currentPosition.coordinate, Paint(1,0))
+            computer.clearInputOutput()
+            computer.input.add(0)
+            computer.runProgram(0, intCodeString)
+
+            while (computer.returnCode != ReturnCode.END && computer.returnCode != ReturnCode.UNKNOWN) {
+                // need to convert longs
+
+                if (computer.output.size > 1) {
+                    val paintColour = computer.output[computer.output.lastIndex - 1]
+                    val move = computer.output.last()
+
+                    paintCurrentSquare(currentPosition, paintColour)
+                    currentPosition = moveRobot(currentPosition, move)
+                }
+                computer.clearInputOutput()
+                computer.input.add(hullGrid[currentPosition.coordinate]!!.colour)
+                computer.resumeProgram()
+            }
+        } catch (e: Exception) {
+            println("here")
+        }
+
+    }
+
+    fun paintCurrentSquare(position: RobotPosition, colour: Long) {
+        try {
+            hullGrid[position.coordinate]!!.timesPainted = hullGrid[position.coordinate]!!.timesPainted + 1
+            hullGrid[position.coordinate]!!.colour = colour
+        } catch (e: Exception) {
+            println("here")
+        }
+    }
+
+    fun moveRobot(currentRobotPosition: RobotPosition, move: Long): RobotPosition {
+        // turn left 90
+        val newRobotPosition: RobotPosition
+        if (move == 0L) {
+            when (currentRobotPosition.directionFacing) {
+                Direction.UP -> newRobotPosition = RobotPosition(
+                    Coordinate(
+                        currentRobotPosition.coordinate.xAxis - 1,
+                        currentRobotPosition.coordinate.yAxis
+                    ), Direction.LEFT
+                )
+                Direction.LEFT -> newRobotPosition = RobotPosition(
+                    Coordinate(
+                        currentRobotPosition.coordinate.xAxis,
+                        currentRobotPosition.coordinate.yAxis - 1
+                    ), Direction.DOWN
+                )
+                Direction.RIGHT -> newRobotPosition = RobotPosition(
+                    Coordinate(
+                        currentRobotPosition.coordinate.xAxis,
+                        currentRobotPosition.coordinate.yAxis + 1
+                    ), Direction.UP
+                )
+                Direction.DOWN -> newRobotPosition = RobotPosition(
+                    Coordinate(
+                        currentRobotPosition.coordinate.xAxis + 1,
+                        currentRobotPosition.coordinate.yAxis
+                    ), Direction.RIGHT
+                )
+            }
+        }
+
+        //turn right 90
+        else if (move == 1L) {
+            when (currentRobotPosition.directionFacing) {
+                Direction.UP -> newRobotPosition = RobotPosition(
+                    Coordinate(
+                        currentRobotPosition.coordinate.xAxis + 1,
+                        currentRobotPosition.coordinate.yAxis
+                    ), Direction.RIGHT
+                )
+                Direction.LEFT -> newRobotPosition = RobotPosition(
+                    Coordinate(
+                        currentRobotPosition.coordinate.xAxis,
+                        currentRobotPosition.coordinate.yAxis + 1
+                    ), Direction.UP
+                )
+                Direction.RIGHT -> newRobotPosition = RobotPosition(
+                    Coordinate(
+                        currentRobotPosition.coordinate.xAxis,
+                        currentRobotPosition.coordinate.yAxis - 1
+                    ), Direction.DOWN
+                )
+                Direction.DOWN -> newRobotPosition = RobotPosition(
+                    Coordinate(
+                        currentRobotPosition.coordinate.xAxis - 1,
+                        currentRobotPosition.coordinate.yAxis
+                    ), Direction.LEFT
+                )
+            }
+        } else newRobotPosition = currentRobotPosition
+
+        hullGrid.putIfAbsent(newRobotPosition.coordinate, Paint(0, 0))
+        return newRobotPosition
+    }
+
+}
+
+class Computer() {
 
     val input: MutableList<Long> = mutableListOf()
     val output: MutableList<Long> = mutableListOf()
-    var returnCode  = ReturnCode.UNKNOWN
+    var returnCode = ReturnCode.UNKNOWN
+    var instruction: InstructionProcessor
+
+    init {
+        instruction = InstructionProcessor(0, mutableListOf())
+    }
 
     fun clearInputOutput() {
         input.clear()
         output.clear()
     }
 
-    fun singleCall(inputCode : Long, intCodeString: String) {
-        val instruction = InstructionProcessor(0L, intCodeString.split(",").toMutableList())
+    fun runProgram(inputCode: Long, intCodeString: String) {
+        instruction = InstructionProcessor(0L, intCodeString.split(",").toMutableList())
         input.add(inputCode)
-        returnCode = instruction.processIntCode(input,output)
+        returnCode = instruction.processIntCode(input, output)
+    }
+
+    fun resumeProgram() {
+        returnCode = instruction.processIntCode(input, output)
     }
 }
 
@@ -50,21 +211,15 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
     var haltProgam: Boolean = false
     var waiting: Boolean = false
 
-    private val internalOutputList: MutableList<Long> = mutableListOf()
     private val instructionMemory: MutableMap<Long, String> = mutableMapOf()
     private var instructionPointer: Long = 0L
     private var relativeBase: Long = 0
 
     init {
         instructionPointer = index
-<<<<<<< HEAD
-        intCodeList.toMutableList().forEachIndexed() { index, singleInstruction ->
-            instructionMemory[index.toLong()] = singleInstruction
-=======
         intCodeList.toMutableList().forEachIndexed() { i, singleInstruction ->
             instructionMemory[i.toLong()] =
                 singleInstruction
->>>>>>> 506b20aa0a6a2ef03ebd536094b3bbe36dc09abc
         }
     }
 
@@ -73,7 +228,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         outputList: MutableList<Long>
     ): ReturnCode {
 
-        do  {
+        do {
             //TODO Join these 2 up so we have one OpCode class which works everything out
             val currentOpCode = getOpCode(instructionPointer)
             val parameterModes = getParameterModes(instructionPointer)
@@ -139,32 +294,39 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
             OpCode.OPCODE4 -> {
                 outputValue = getfirstInstructionValue(parameterModes)
                 outputList.add(outputValue)
-                internalOutputList.add(outputValue)
                 instructionPointer += OpCode.OPCODE4.increment
             }
             OpCode.OPCODE5 -> {
                 firstValue = getfirstInstructionValue(parameterModes)
                 secondValue = getSecondInstructionValue(parameterModes)
-                if (firstValue != 0L) instructionPointer = secondValue else instructionPointer += OpCode.OPCODE5.increment
+                if (firstValue != 0L) instructionPointer =
+                    secondValue else instructionPointer += OpCode.OPCODE5.increment
             }
             OpCode.OPCODE6 -> {
                 firstValue = getfirstInstructionValue(parameterModes)
                 secondValue = getSecondInstructionValue(parameterModes)
-                if (firstValue == 0L) instructionPointer = secondValue else instructionPointer +=  OpCode.OPCODE6.increment
+                if (firstValue == 0L) instructionPointer =
+                    secondValue else instructionPointer += OpCode.OPCODE6.increment
 
             }
             OpCode.OPCODE7 -> {
                 firstValue = getfirstInstructionValue(parameterModes)
                 secondValue = getSecondInstructionValue(parameterModes)
                 thirdValue = getThirdInstructionValue(parameterModes)
-                if (firstValue < secondValue) assignValueToMemory(thirdValue, "1") else assignValueToMemory(thirdValue, "0")
-                instructionPointer +=  OpCode.OPCODE7.increment
+                if (firstValue < secondValue) assignValueToMemory(thirdValue, "1") else assignValueToMemory(
+                    thirdValue,
+                    "0"
+                )
+                instructionPointer += OpCode.OPCODE7.increment
             }
             OpCode.OPCODE8 -> {
                 firstValue = getfirstInstructionValue(parameterModes)
                 secondValue = getSecondInstructionValue(parameterModes)
                 thirdValue = getThirdInstructionValue(parameterModes)
-                if (firstValue == secondValue) assignValueToMemory(thirdValue, "1") else assignValueToMemory(thirdValue, "0")
+                if (firstValue == secondValue) assignValueToMemory(thirdValue, "1") else assignValueToMemory(
+                    thirdValue,
+                    "0"
+                )
                 instructionPointer += OpCode.OPCODE8.increment
             }
             OpCode.OPCODE9 -> {
@@ -180,18 +342,13 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         }
     }
 
-<<<<<<< HEAD
-    fun assignValueToMemory(key: Long, value: String) {
-         instructionMemory[key] = value
-=======
     private fun assignValueToMemory(key: Long, value: String) {
         if (instructionMemory.containsKey(key)) instructionMemory[key] = value
         else instructionMemory[key] = value
->>>>>>> 506b20aa0a6a2ef03ebd536094b3bbe36dc09abc
     }
 
     //Checks to see if a key(memory address exists), if not, it creates one with value zero
-    private fun doesKeyExistIfNotCreate(key: Long)  {
+    private fun doesKeyExistIfNotCreate(key: Long) {
         if (instructionMemory.containsKey(key)) //Do nothing
         else
             instructionMemory[key] = "0"
@@ -205,7 +362,7 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         return when (parameterModes.param1) {
             ParameterType.IMMEDIATE -> instructionMemory[firstParameterPointer]!!.toLong()
             ParameterType.POSITION -> {
-                doesKeyExistIfNotCreate (instructionMemory[firstParameterPointer]!!.toLong())
+                doesKeyExistIfNotCreate(instructionMemory[firstParameterPointer]!!.toLong())
                 instructionMemory[instructionMemory[firstParameterPointer]!!.toLong()]!!.toLong()
             }
             ParameterType.RELATIVE -> {
@@ -222,11 +379,11 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
         return when (parameterModes.param2) {
             ParameterType.IMMEDIATE -> instructionMemory[secondParameterPointer]!!.toLong()
             ParameterType.POSITION -> {
-                doesKeyExistIfNotCreate (instructionMemory[secondParameterPointer]!!.toLong())
+                doesKeyExistIfNotCreate(instructionMemory[secondParameterPointer]!!.toLong())
                 instructionMemory[instructionMemory[secondParameterPointer]!!.toLong()]!!.toLong()
             }
             ParameterType.RELATIVE -> {
-                doesKeyExistIfNotCreate (instructionMemory[secondParameterPointer]!!.toLong())
+                doesKeyExistIfNotCreate(instructionMemory[secondParameterPointer]!!.toLong())
                 instructionMemory[instructionMemory[secondParameterPointer]!!.toLong() + relativeBase]!!.toLong()
             }
         }
@@ -309,8 +466,9 @@ class InstructionProcessor(index: Long, intCodeList: MutableList<String>) {
 
         }
     }
+
     //nested class
-    enum class OpCode (val increment : Int) {
+    enum class OpCode(val increment: Int) {
         OPCODE1(4),
         OPCODE2(4),
         OPCODE3(2),
