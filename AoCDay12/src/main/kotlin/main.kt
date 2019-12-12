@@ -8,9 +8,9 @@ fun main() {
 
     val rawMoonData = getData("src/main/resources/day12input")
     //val rawMoonData = getData("src/main/resources/day12testdata1.txt")
-    val systemX: System = System(rawMoonData)
-    val systemY: System = System(rawMoonData)
-    val systemZ: System = System(rawMoonData)
+    val systemX = System(rawMoonData)
+    val systemY = System(rawMoonData)
+    val systemZ = System(rawMoonData)
 
     //system.moveSystemDefinedTimeSteps(1)
     //println(system.calculateTotalEnergyForSystem())
@@ -24,14 +24,15 @@ fun main() {
     println(z)
 
 
-    println (leastCommonMultiple (x, leastCommonMultiple(y,z)))
+    println(leastCommonMultiple(x, leastCommonMultiple(y, z)))
 
 }
 
-fun leastCommonMultiple (x : Long, y : Long) : Long{
-    return (x * y)/ greatestCommonDivisor(x,y)
+fun leastCommonMultiple(x: Long, y: Long): Long {
+    return (x * y) / greatestCommonDivisor(x, y)
 }
-fun greatestCommonDivisor(x : Long, y : Long): Long {
+
+fun greatestCommonDivisor(x: Long, y: Long): Long {
     return if (y != 0L)
         greatestCommonDivisor(y, x.rem(y))
     else x
@@ -46,7 +47,6 @@ fun getData(filename: String): List<String> {
 
 class System(rawMoonData: List<String>) {
     val moons: MutableList<Moon> = mutableListOf()
-    val commonMoonPeriods: MutableList<Int> = mutableListOf()
 
     init {
         rawMoonData.forEach { it ->
@@ -59,39 +59,39 @@ class System(rawMoonData: List<String>) {
         }
     }
 
-    fun calculateCommonXPeriodOfAllMoons() : Long {
+    fun calculateCommonXPeriodOfAllMoons(): Long {
         moveOneTimeStep()
         var xPeriod = 1L
         var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.XAXIS) }.all { it == 1 }
         while (!ret) {
             moveOneTimeStep()
-            xPeriod ++
+            xPeriod++
             ret = moons.map { it.doesInitialPosAnVelMatch(Axis.XAXIS) }.all { it == 1 }
         }
         return xPeriod
     }
 
-    fun calculateCommonYPeriodOfAllMoons() : Long{
+    fun calculateCommonYPeriodOfAllMoons(): Long {
 
         moveOneTimeStep()
         var yPeriod = 1L
         var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.YAXIS) }.all { it == 1 }
         while (!ret) {
             moveOneTimeStep()
-            yPeriod ++
+            yPeriod++
             ret = moons.map { it.doesInitialPosAnVelMatch(Axis.YAXIS) }.all { it == 1 }
         }
         return yPeriod
     }
 
-    fun calculateCommonZPeriodOfAllMoons() : Long{
+    fun calculateCommonZPeriodOfAllMoons(): Long {
 
         moveOneTimeStep()
         var zPeriod = 1L
         var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.ZAXIS) }.all { it == 1 }
         while (!ret) {
             moveOneTimeStep()
-            zPeriod ++
+            zPeriod++
             ret = moons.map { it.doesInitialPosAnVelMatch(Axis.ZAXIS) }.all { it == 1 }
         }
         return zPeriod
@@ -133,7 +133,7 @@ class Moon(
 
     fun doesInitialPosAnVelMatch(axis: Axis): Int {
         return when (axis) {
-            Axis.XAXIS -> if(position.xAxis == initialPosition.xAxis && velocity.xVelocity == initialVelocity.xVelocity) 1 else 0
+            Axis.XAXIS -> if (position.xAxis == initialPosition.xAxis && velocity.xVelocity == initialVelocity.xVelocity) 1 else 0
             Axis.YAXIS -> if (position.yAxis == initialPosition.yAxis && velocity.yVelocity == initialVelocity.yVelocity) 1 else 0
             Axis.ZAXIS -> if (position.zAxis == initialPosition.zAxis && velocity.zVelocity == initialVelocity.zVelocity) 1 else 0
         }
