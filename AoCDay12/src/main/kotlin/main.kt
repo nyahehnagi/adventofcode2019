@@ -8,10 +8,33 @@ fun main() {
 
     val rawMoonData = getData("src/main/resources/day12input")
     //val rawMoonData = getData("src/main/resources/day12testdata1.txt")
-    val system: System = System(rawMoonData)
+    val systemX: System = System(rawMoonData)
+    val systemY: System = System(rawMoonData)
+    val systemZ: System = System(rawMoonData)
 
-    system.moveSystemDefinedTimeSteps(1000)
-    println(system.calculateTotalEnergyForSystem())
+    //system.moveSystemDefinedTimeSteps(1)
+    //println(system.calculateTotalEnergyForSystem())
+
+    val x = systemX.calculateCommonXPeriodOfAllMoons()
+    val y = systemY.calculateCommonYPeriodOfAllMoons()
+    val z = systemZ.calculateCommonZPeriodOfAllMoons()
+
+    println(x)
+    println(y)
+    println(z)
+
+
+    println (leastCommonMultiple (x, leastCommonMultiple(y,z)))
+
+}
+
+fun leastCommonMultiple (x : Long, y : Long) : Long{
+    return (x * y)/ greatestCommonDivisor(x,y)
+}
+fun greatestCommonDivisor(x : Long, y : Long): Long {
+    return if (y != 0L)
+        greatestCommonDivisor(y, x.rem(y))
+    else x
 }
 
 typealias VelocityChangeXYZ = Triple<Int, Int, Int>
@@ -23,6 +46,7 @@ fun getData(filename: String): List<String> {
 
 class System(rawMoonData: List<String>) {
     val moons: MutableList<Moon> = mutableListOf()
+    val commonMoonPeriods: MutableList<Int> = mutableListOf()
 
     init {
         rawMoonData.forEach { it ->
@@ -35,7 +59,45 @@ class System(rawMoonData: List<String>) {
         }
     }
 
-    fun moveSystemDefinedTimeSteps(numberOfTimeSteps : Int) {
+    fun calculateCommonXPeriodOfAllMoons() : Long {
+        moveOneTimeStep()
+        var xPeriod = 1L
+        var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.XAXIS) }.all { it == 1 }
+        while (!ret) {
+            moveOneTimeStep()
+            xPeriod ++
+            ret = moons.map { it.doesInitialPosAnVelMatch(Axis.XAXIS) }.all { it == 1 }
+        }
+        return xPeriod
+    }
+
+    fun calculateCommonYPeriodOfAllMoons() : Long{
+
+        moveOneTimeStep()
+        var yPeriod = 1L
+        var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.YAXIS) }.all { it == 1 }
+        while (!ret) {
+            moveOneTimeStep()
+            yPeriod ++
+            ret = moons.map { it.doesInitialPosAnVelMatch(Axis.YAXIS) }.all { it == 1 }
+        }
+        return yPeriod
+    }
+
+    fun calculateCommonZPeriodOfAllMoons() : Long{
+
+        moveOneTimeStep()
+        var zPeriod = 1L
+        var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.ZAXIS) }.all { it == 1 }
+        while (!ret) {
+            moveOneTimeStep()
+            zPeriod ++
+            ret = moons.map { it.doesInitialPosAnVelMatch(Axis.ZAXIS) }.all { it == 1 }
+        }
+        return zPeriod
+    }
+
+    fun moveSystemDefinedTimeSteps(numberOfTimeSteps: Int) {
         for (i in 1..numberOfTimeSteps) {
             moveOneTimeStep()
         }
@@ -51,15 +113,32 @@ class System(rawMoonData: List<String>) {
         }
     }
 
-    fun calculateTotalEnergyForSystem() : Int {
+    fun calculateTotalEnergyForSystem(): Int {
         return moons.map { it.calculateTotalEnergyForMoon() }.sum()
     }
 }
 
-data class Moon(
+
+class Moon(
     val position: Position,
     val velocity: Velocity
 ) {
+    val initialPosition: Position
+    val initialVelocity: Velocity
+
+    init {
+        initialPosition = Position(position.xAxis, position.yAxis, position.zAxis)
+        initialVelocity = Velocity(velocity.xVelocity, velocity.yVelocity, velocity.zVelocity)
+    }
+
+    fun doesInitialPosAnVelMatch(axis: Axis): Int {
+        return when (axis) {
+            Axis.XAXIS -> if(position.xAxis == initialPosition.xAxis && velocity.xVelocity == initialVelocity.xVelocity) 1 else 0
+            Axis.YAXIS -> if (position.yAxis == initialPosition.yAxis && velocity.yVelocity == initialVelocity.yVelocity) 1 else 0
+            Axis.ZAXIS -> if (position.zAxis == initialPosition.zAxis && velocity.zVelocity == initialVelocity.zVelocity) 1 else 0
+        }
+    }
+
     fun calculateTotalEnergyForMoon(): Int {
         val potentialEnergy = position.xAxis.absoluteValue + position.yAxis.absoluteValue + position.zAxis.absoluteValue
         val kineticEnergy =
@@ -103,7 +182,11 @@ data class Moon(
     }
 }
 
-
+enum class Axis {
+    XAXIS,
+    YAXIS,
+    ZAXIS
+}
 
 data class Position(
     var xAxis: Int,
