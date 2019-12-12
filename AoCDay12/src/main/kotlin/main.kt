@@ -15,9 +15,9 @@ fun main() {
     //system.moveSystemDefinedTimeSteps(1)
     //println(system.calculateTotalEnergyForSystem())
 
-    val x = systemX.calculateCommonXPeriodOfAllMoons()
-    val y = systemY.calculateCommonYPeriodOfAllMoons()
-    val z = systemZ.calculateCommonZPeriodOfAllMoons()
+    val x = systemX.calculateCommonPeriodOfAllMoonsByAxis(Axis.XAXIS)
+    val y = systemY.calculateCommonPeriodOfAllMoonsByAxis(Axis.YAXIS)
+    val z = systemZ.calculateCommonPeriodOfAllMoonsByAxis(Axis.ZAXIS)
 
     println(x)
     println(y)
@@ -59,42 +59,17 @@ class System(rawMoonData: List<String>) {
         }
     }
 
-    fun calculateCommonXPeriodOfAllMoons(): Long {
+    fun calculateCommonPeriodOfAllMoonsByAxis (axis: Axis) : Long{
         moveOneTimeStep()
-        var xPeriod = 1L
-        var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.XAXIS) }.all { it == 1 }
-        while (!ret) {
+        var period = 1L
+        var doAllMoonsMatch = moons.map { it.doesInitialPosAnVelMatch(axis) }.all { it == 1 }
+        while (!doAllMoonsMatch) {
             moveOneTimeStep()
-            xPeriod++
-            ret = moons.map { it.doesInitialPosAnVelMatch(Axis.XAXIS) }.all { it == 1 }
+            period++
+            doAllMoonsMatch = moons.map { it.doesInitialPosAnVelMatch(axis) }.all { it == 1 }
         }
-        return xPeriod
-    }
+        return period
 
-    fun calculateCommonYPeriodOfAllMoons(): Long {
-
-        moveOneTimeStep()
-        var yPeriod = 1L
-        var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.YAXIS) }.all { it == 1 }
-        while (!ret) {
-            moveOneTimeStep()
-            yPeriod++
-            ret = moons.map { it.doesInitialPosAnVelMatch(Axis.YAXIS) }.all { it == 1 }
-        }
-        return yPeriod
-    }
-
-    fun calculateCommonZPeriodOfAllMoons(): Long {
-
-        moveOneTimeStep()
-        var zPeriod = 1L
-        var ret = moons.map { it.doesInitialPosAnVelMatch(Axis.ZAXIS) }.all { it == 1 }
-        while (!ret) {
-            moveOneTimeStep()
-            zPeriod++
-            ret = moons.map { it.doesInitialPosAnVelMatch(Axis.ZAXIS) }.all { it == 1 }
-        }
-        return zPeriod
     }
 
     fun moveSystemDefinedTimeSteps(numberOfTimeSteps: Int) {
@@ -123,13 +98,9 @@ class Moon(
     val position: Position,
     val velocity: Velocity
 ) {
-    val initialPosition: Position
-    val initialVelocity: Velocity
+    val initialPosition: Position = Position(position.xAxis, position.yAxis, position.zAxis)
+    val initialVelocity: Velocity = Velocity(velocity.xVelocity, velocity.yVelocity, velocity.zVelocity)
 
-    init {
-        initialPosition = Position(position.xAxis, position.yAxis, position.zAxis)
-        initialVelocity = Velocity(velocity.xVelocity, velocity.yVelocity, velocity.zVelocity)
-    }
 
     fun doesInitialPosAnVelMatch(axis: Axis): Int {
         return when (axis) {
