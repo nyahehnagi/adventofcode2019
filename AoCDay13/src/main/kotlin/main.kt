@@ -6,7 +6,10 @@ import java.lang.*
 import java.lang.Integer.max
 
 fun main() {
-    day12(getData("src/main/resources/day12input.csv")[0])
+    //day13(getData("src/main/resources/day13input.csv")[0])
+    //day13(getData("src/main/resources/day13.input")[0])
+    day13(getData("src/main/resources/day13_chris.input")[0])
+
 }
 
 fun getData(filename: String): List<String> {
@@ -14,10 +17,10 @@ fun getData(filename: String): List<String> {
     return data.readLines()
 }
 
-fun day12(intCodeString: String) {
+fun day13(intCodeString: String) {
     val game = Game()
 
-    game.startGame(intCodeString, 2)
+    game.startGame(intCodeString)
     println(game.getTileCount(TileType.BLOCK))
     playGame(game)
 }
@@ -28,15 +31,13 @@ fun playGame(game: Game) {
         val xBall = game.getBallPosition().xAxis
         val xPaddle = game.getPaddlePosition().xAxis
         val paddleDirection: JoyStick
-        if (xPaddle < xBall) {
-            paddleDirection = JoyStick.RIGHT
-        } else if (xPaddle > xBall) {
-            paddleDirection = JoyStick.LEFT
-        } else
-            paddleDirection = JoyStick.NEUT
+        paddleDirection = when {
+            xPaddle < xBall ->  JoyStick.RIGHT
+            xPaddle > xBall -> JoyStick.LEFT
+            else -> JoyStick.NEUTRAL
 
+        }
         game.moveJoystick(paddleDirection.value)
-
     }
 
     println(game.screen.getScreen())
@@ -56,10 +57,10 @@ class Game {
         processOutput()
     }
 
-    fun startGame(intCodeString: String, inputCode: Long) {
+    fun startGame(intCodeString: String) {
 
         gameComputer.clearInputOutput()
-        gameComputer.runProgram(null, intCodeString)
+        gameComputer.runProgram(intCodeString)
         processOutput()
     }
 
@@ -163,12 +164,12 @@ enum class TileType {
 }
 
 enum class JoyStick(val value: Int) {
-    NEUT(0),
+    NEUTRAL(0),
     LEFT(-1),
     RIGHT(1)
 }
 
-class Computer() {
+class Computer {
 
     val input: MutableList<Long> = mutableListOf()
     val output: MutableList<Long> = mutableListOf()
@@ -184,10 +185,9 @@ class Computer() {
         output.clear()
     }
 
-    fun runProgram(inputCode: Long?, intCodeString: String) {
+    fun runProgram( intCodeString: String) {
         instruction = InstructionProcessor(0L, intCodeString.split(",").toMutableList())
 
-        if (inputCode != null) input.add(inputCode)
         returnCode = instruction.processIntCode(input, output)
     }
 
