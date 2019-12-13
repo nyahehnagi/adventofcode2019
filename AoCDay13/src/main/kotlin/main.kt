@@ -6,12 +6,7 @@ import java.lang.*
 import java.lang.Integer.max
 
 fun main() {
-    //val intCodeDay9Test1 = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"
-    //val intCodeDay9Test1 = "1102,34915192,34915192,7,4,7,99,0"
-    //val intCodeDay9Test1 = "104,1125899906842624,99"
     day12(getData("src/main/resources/day12input.csv")[0])
-
-
 }
 
 fun getData(filename: String): List<String> {
@@ -48,13 +43,7 @@ fun playGame(game: Game) {
     println(game.score)
 }
 
-
-class Tile() {
-    val tileType: TileType = TileType.EMPTY
-}
-
-
-class Game() {
+class Game{
 
     val screen: GameScreen = GameScreen()
     val gameComputer: Computer = Computer()
@@ -109,7 +98,6 @@ class Game() {
         return screen.gameTiles.filter { it.value == TileType.BALL }.toList()[0].first
     }
 
-
     fun getTileCount(tiletype: TileType): Int {
         return screen.gameTiles.filter { it.value == tiletype }.count()
 
@@ -126,7 +114,6 @@ class Game() {
             else -> TileType.UNKNOWN
         }
     }
-
 
 }
 
