@@ -43,7 +43,7 @@ fun playGame(game: Game) {
     println(game.score)
 }
 
-class Game{
+class Game {
 
     val screen: GameScreen = GameScreen()
     val gameComputer: Computer = Computer()
@@ -58,14 +58,9 @@ class Game{
 
     fun startGame(intCodeString: String, inputCode: Long) {
 
-        try {
-            gameComputer.clearInputOutput()
-            gameComputer.runProgram(null, intCodeString)
-            processOutput()
-
-        } catch (e: Exception) {
-            println("here")
-        }
+        gameComputer.clearInputOutput()
+        gameComputer.runProgram(null, intCodeString)
+        processOutput()
     }
 
     fun processOutput() {
@@ -81,7 +76,7 @@ class Game{
                 //it's a score
                 score = thirdOutputValue
             } else {
-                val tileType = getTileType(thirdOutputValue)
+                val tileType = getTileTypeByID(thirdOutputValue)
                 if (screen.gameTiles.containsKey(coord)) {
                     screen.gameTiles[coord] = tileType
                 }
@@ -100,10 +95,9 @@ class Game{
 
     fun getTileCount(tiletype: TileType): Int {
         return screen.gameTiles.filter { it.value == tiletype }.count()
-
     }
 
-    fun getTileType(tileID: Long): TileType {
+    fun getTileTypeByID(tileID: Long): TileType {
 
         return when (tileID) {
             0L -> TileType.EMPTY
