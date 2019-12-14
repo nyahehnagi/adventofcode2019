@@ -12,12 +12,11 @@ fun main() {
     //val elementMap = createDataSet(getData("src/main/resources/test3.txt"))
     //val elementMap = createDataSet(getData("src/main/resources/test4.txt"))
 
-
     val totalOre = elementMap.calculateOreToMakeNumberOfElement("FUEL", 1)
     val ore: Long = 1000000000000
-    val fuel = elementMap.totalFuelFromOre(ore)
+    //val fuel = elementMap.totalFuelFromOre(ore)
     println(totalOre)
-    println(fuel - 1)
+    //println(fuel)
 }
 
 
@@ -71,23 +70,19 @@ class ElementMap {
 
     fun calculateOreToMakeNumberOfElement(name: String, amount: Int): Int {
 
-        var currentTotal: Int = 0
+        var currentTotalOre = 0
 
         if (name == "ORE") {
-            currentTotal = amount
+            currentTotalOre = amount
         } else {
             val currentElement: Element = elementMap[name]!!
-            val createdByList: List<Pair<String, Int>> = currentElement.createdBy
+            val createdByList: List<Pair<ElementName, NeedsAmount>> = currentElement.createdBy
             createdByList.forEach {
                 val nextElement = elementMap[it.first]
                 val nextAmount: Int
-                val currentSurplus: Int
                 val nextSurplus: Int
 
-                if (surplus.containsKey(it.first))
-                    currentSurplus = surplus[it.first]!!
-                else
-                    currentSurplus = 0
+                val currentSurplus = if (surplus.containsKey(it.first)) surplus[it.first]!! else 0
 
                 var amountOfThisNeeded = (it.second * amount) - currentSurplus
                 if (amountOfThisNeeded <= 0) {
@@ -99,46 +94,44 @@ class ElementMap {
 
                 if (nextElement != null) {
 
-                    if ((amountOfThisNeeded).rem(nextElement!!.amountCreated) > 0) {
+                    if ((amountOfThisNeeded).rem(nextElement.amountCreated) > 0) {
 
                         nextAmount = floor(((amountOfThisNeeded) / nextElement!!.amountCreated).toDouble()).toInt() + 1
-                        nextSurplus = nextAmount * nextElement!!.amountCreated - amountOfThisNeeded
-
-                        if (surplus.containsKey(it.first))
-                            surplus[it.first] = surplus[it.first]!! + nextSurplus
-                        else
-                            surplus.put(it.first, nextSurplus)
+                        nextSurplus = nextAmount * nextElement.amountCreated - amountOfThisNeeded
+                        surplus[it.first] = surplus[it.first]!! + nextSurplus
 
                     } else {
-                        nextAmount = amountOfThisNeeded / nextElement!!.amountCreated
-                        nextSurplus = nextAmount * nextElement!!.amountCreated - amountOfThisNeeded
-                        if (surplus.containsKey(it.first))
-                            surplus[it.first] = surplus[it.first]!! + nextSurplus
-                        else
-                            surplus.put(it.first, nextSurplus)
+                        nextAmount = amountOfThisNeeded / nextElement.amountCreated
+                        nextSurplus = nextAmount * nextElement.amountCreated - amountOfThisNeeded
+                        surplus[it.first] = surplus[it.first]!! + nextSurplus
+
                     }
                 } else {
+                    // then next recursive call will be for an ORE.
                     nextAmount = amountOfThisNeeded
 
                 }
 
                 if (amountOfThisNeeded == 0) {
-                    currentTotal += calculateOreToMakeNumberOfElement(it.first, 0)
+                    currentTotalOre += calculateOreToMakeNumberOfElement(it.first, 0)
                 } else {
-                    currentTotal += calculateOreToMakeNumberOfElement(it.first, nextAmount)
+                    currentTotalOre += calculateOreToMakeNumberOfElement(it.first, nextAmount)
                 }
             }
         }
-        return currentTotal
+        return currentTotalOre
     }
 
 }
+
+typealias ElementName = String
+typealias NeedsAmount = Int
 
 class Element(_name: String, _amountCreated: Int, _createdBy: List<Pair<String, Int>>) {
 
     val name: String
     val amountCreated: Int
-    val createdBy: List<Pair<String, Int>>
+    val createdBy: List<Pair<ElementName, NeedsAmount>>
 
     init {
         name = _name
