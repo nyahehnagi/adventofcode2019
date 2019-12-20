@@ -17,11 +17,15 @@ fun getData(filename: String): List<String> {
 }
 
 fun day17(intCodeString: String) {
-    val asciiInterface  = ASCIIInterface()
+    val asciiInterface = ASCIIInterface()
 
-    asciiInterface.start(intCodeString)
-    println(asciiInterface.getPrintableString())
-    println(asciiInterface.calculateAlignmentParameters())
+   //asciiInterface.start(intCodeString)
+    //println(asciiInterface.getPrintableString())
+    //println(asciiInterface.calculateAlignmentParameters())
+
+    //asciiInterface.calculateRobotPath()
+    asciiInterface.calculateRobotDust(intCodeString)
+
 }
 
 
@@ -29,9 +33,201 @@ class ASCIIInterface {
 
     val asciiComputer: Computer = Computer()
     val scaffoldMap: MutableMap<Coordinate, Char> = mutableMapOf()
-    val intersectingScaffold : MutableList<Coordinate> = mutableListOf()
-    var maxXaxis : Int = 0
-    var maxYAxis : Int = 0
+    val intersectingScaffold: MutableList<Coordinate> = mutableListOf()
+    var maxXaxis: Int = 0
+    var maxYAxis: Int = 0
+
+    fun calculateRobotDust(intCodeString: String) : Long{
+        //R,6,L,12,R,6,R,6,L,12,R,6,L,12,R,6,L,8,L,12,R,12,L,10,L,10,L,12,R,6,L,8,L,12,R,12,L,10,L,10,L,12,R,6,L,8,L,12,R,12,L,10,L,10,L,12,R,6,L,8,L,12,R,6,L,12,R,6
+        // worked out by hand regarding the pattern LOL
+        //R,6,L,12,R,6 (A)
+        //R,6,L,12,R,6 (A)
+        //L,12,R,6,L,8,L,12 (B)
+        //R,12,L,10,L,10, (C)
+        //L,12,R,6,L,8,L,12 (B)
+        //R,12,L,10,L,10, (C)
+        //L,12,R,6,L,8,L,12, (B)
+        //R,12,L,10,L,10, (C)
+        //L,12,R,6,L,8,L,12, (B)
+        //R,6,L,12,R,6 (A)
+
+        val stringA = "R,6,L,12,R,6,"
+        val stringB = "L,12,R,6,L,8,L,12,"
+        val stringC = "R,12,L,10,L,10,"
+
+        val mainInput = listOf<Long>(65,44,65,44,66,44,67,44,66,44,67,44,66,44,67,44,66,44,65,10)
+        val inputA = listOf<Long>(82, 44, 54, 44, 76, 44,49,50,44,82,44,54,10)
+        val inputB = listOf<Long>(76,44,49,50,44,82,44,54,44,76,44,56,44,76,44,49,50,10)
+        val inputC = listOf<Long>(82,44,49,50,44,76,44,49,48,44,76,44,49,48,10)
+
+        asciiComputer.clearInputOutput()
+        asciiComputer.runProgram(intCodeString)
+        asciiComputer.clearInputOutput()
+        // add main routine
+        mainInput.forEach { asciiComputer.input.add(it) }
+        asciiComputer.resumeProgram()
+        //
+        inputA.forEach { asciiComputer.input.add(it) }
+        asciiComputer.resumeProgram()
+        inputB.forEach { asciiComputer.input.add(it) }
+        asciiComputer.resumeProgram()
+        inputC.forEach { asciiComputer.input.add(it) }
+        asciiComputer.resumeProgram()
+        asciiComputer.clearInputOutput()
+        asciiComputer.input.add(121)
+        asciiComputer.input.add(10)
+        asciiComputer.resumeProgram()
+        println(asciiComputer.output[asciiComputer.output.lastIndex])
+        return asciiComputer.output[asciiComputer.output.lastIndex].toLong()
+    }
+
+    fun calculateRobotPath() {
+        val scaffoldToVisit = scaffoldMap.filter { isScaffoldOrRobot(it.key) }.count()
+
+        var moveString = ""
+        //get starting position of robot
+        var currentCoordinate = Coordinate(0, 16) //need to work this out programmatically.
+        var distanceAndCoordinate: Pair<Int, Coordinate>
+
+        //make robot face in the direction of the scaffold
+        var currentDirection: Direction = initialiseRobot(currentCoordinate)
+        var currentFacing: RobotFacing = RobotFacing.RIGHT
+
+        moveString += currentDirection.direction
+
+        var moves = 0
+       do {
+            distanceAndCoordinate = determineHowFarToMove(currentCoordinate, currentFacing)
+
+            //move and turn
+            currentCoordinate = distanceAndCoordinate.second
+            currentDirection = getNextDirection(currentCoordinate, currentFacing).first
+            currentFacing = getNextDirection(currentCoordinate, currentFacing).second
+
+            if (moves > scaffoldToVisit){
+                moveString += "," + distanceAndCoordinate.first.toString()
+            }
+            else
+                moveString += "," + distanceAndCoordinate.first.toString() + "," + currentDirection.direction
+
+            moves = moves + (distanceAndCoordinate.first)
+
+        } while (moves <= scaffoldToVisit + 11) //something wrong with my scaffold calculation or way I am increasing the counter // - hence the hack to just make it work
+
+        println(scaffoldToVisit)
+        println(moves)
+        println(moveString)
+    }
+
+    fun initialiseRobot(currentCoordinate: Coordinate): Direction {
+        // add code to do this properly. I know it is Right
+        return Direction.RIGHT
+    }
+
+    fun getNextDirection(currentCoordinate: Coordinate, currentRobotFacing: RobotFacing): Pair<Direction, RobotFacing> {
+
+        var testCoord: Coordinate
+
+        when (currentRobotFacing) {
+            RobotFacing.UP -> {
+                testCoord = Coordinate(currentCoordinate.xAxis - 1, currentCoordinate.yAxis)
+                if (isScaffoldOrRobot(testCoord)){
+                    return Pair (Direction.LEFT,RobotFacing.LEFT)
+                }
+                testCoord = Coordinate(currentCoordinate.xAxis + 1, currentCoordinate.yAxis)
+                if (isScaffoldOrRobot(testCoord)){
+                    return Pair (Direction.RIGHT,RobotFacing.RIGHT)
+                }
+            }
+            RobotFacing.DOWN -> {
+                testCoord = Coordinate(currentCoordinate.xAxis + 1, currentCoordinate.yAxis)
+                if (isScaffoldOrRobot(testCoord)){
+                    return Pair (Direction.LEFT,RobotFacing.RIGHT)
+                }
+                testCoord = Coordinate(currentCoordinate.xAxis - 1, currentCoordinate.yAxis)
+                if (isScaffoldOrRobot(testCoord)){
+                    return Pair (Direction.RIGHT,RobotFacing.LEFT)
+                }
+            }
+            RobotFacing.LEFT -> {
+                testCoord = Coordinate(currentCoordinate.xAxis, currentCoordinate.yAxis + 1)
+                if (isScaffoldOrRobot(testCoord)){
+                    return Pair (Direction.LEFT,RobotFacing.DOWN)
+                }
+                testCoord = Coordinate(currentCoordinate.xAxis , currentCoordinate.yAxis - 1)
+                if (isScaffoldOrRobot(testCoord)){
+                    return Pair (Direction.RIGHT,RobotFacing.UP)
+                }
+            }
+            RobotFacing.RIGHT -> {
+                testCoord = Coordinate(currentCoordinate.xAxis , currentCoordinate.yAxis -1)
+                if (isScaffoldOrRobot(testCoord)){
+                    return Pair (Direction.LEFT,RobotFacing.UP)
+                }
+                testCoord = Coordinate(currentCoordinate.xAxis , currentCoordinate.yAxis + 1)
+                if (isScaffoldOrRobot(testCoord)){
+                    return Pair (Direction.RIGHT,RobotFacing.DOWN)
+                }
+            }
+        }
+        //will never get here
+        return Pair(Direction.LEFT,currentRobotFacing)
+    }
+
+    fun determineHowFarToMove(currentCoordinate: Coordinate, robotFacing: RobotFacing): Pair<Int, Coordinate> {
+        // count forward the number of scaffold
+        var nextCoordinate : Coordinate = currentCoordinate
+        var previousCoordinate : Coordinate = currentCoordinate
+        var moveCount : Int = 0
+        when (robotFacing){
+            RobotFacing.RIGHT ->{
+                while (isScaffoldOrRobot(nextCoordinate)){
+                    previousCoordinate = nextCoordinate
+                    nextCoordinate = Coordinate(nextCoordinate.xAxis + 1, nextCoordinate.yAxis)
+                    moveCount++
+                }
+                return Pair (moveCount -1 , previousCoordinate)
+            }
+            RobotFacing.LEFT -> {
+                while (isScaffoldOrRobot(nextCoordinate)){
+                    previousCoordinate = nextCoordinate
+                    nextCoordinate = Coordinate(nextCoordinate.xAxis - 1, nextCoordinate.yAxis)
+                    moveCount++
+                }
+                return Pair (moveCount -1 , previousCoordinate)
+            }
+            RobotFacing.UP -> {
+                while (isScaffoldOrRobot(nextCoordinate)){
+                    previousCoordinate = nextCoordinate
+                    nextCoordinate = Coordinate(nextCoordinate.xAxis, nextCoordinate.yAxis - 1)
+                    moveCount++
+                }
+                return Pair (moveCount -1 , previousCoordinate)
+            }
+            RobotFacing.DOWN -> {
+                while (isScaffoldOrRobot(nextCoordinate)){
+                    previousCoordinate = nextCoordinate
+                    nextCoordinate = Coordinate(nextCoordinate.xAxis , nextCoordinate.yAxis + 1)
+                    moveCount++
+                }
+                return Pair (moveCount -1 , previousCoordinate)
+            }
+
+        }
+
+    }
+
+    enum class RobotFacing(direction: Char) {
+        UP('^'),
+        DOWN('v'),
+        LEFT('<'),
+        RIGHT('>')
+    }
+
+    enum class Direction(val direction: Char) {
+        LEFT('L'),
+        RIGHT('R')
+    }
 
     fun start(intCodeString: String) {
 
@@ -40,12 +236,12 @@ class ASCIIInterface {
         processOutput()
     }
 
-    fun calculateAlignmentParameters() : Int{
+    fun calculateAlignmentParameters(): Int {
         findScaffoldIntersections()
-        return intersectingScaffold.fold(0,{ total, element -> total + (element.xAxis * element.yAxis)})
+        return intersectingScaffold.fold(0, { total, element -> total + (element.xAxis * element.yAxis) })
     }
 
-    fun findScaffoldIntersections (){
+    fun findScaffoldIntersections() {
 
         scaffoldMap.forEach {
             if (isScaffoldOrRobot(it.key)) {
@@ -56,85 +252,88 @@ class ASCIIInterface {
         }
     }
 
-    fun isIntersectingScaffold (coordinate: Coordinate): Boolean{
+    fun isIntersectingScaffold(coordinate: Coordinate): Boolean {
 
-        var scaffoldAbove = Coordinate(coordinate.xAxis,coordinate.yAxis -1)
-        var scaffoldBelow = Coordinate(coordinate.xAxis,coordinate.yAxis +1)
-        var scaffoldLeft = Coordinate(coordinate.xAxis -1,coordinate.yAxis)
-        var scaffoldRight = Coordinate(coordinate.xAxis + 1,coordinate.yAxis)
+        val scaffoldAbove = Coordinate(coordinate.xAxis, coordinate.yAxis - 1)
+        val scaffoldBelow = Coordinate(coordinate.xAxis, coordinate.yAxis + 1)
+        val scaffoldLeft = Coordinate(coordinate.xAxis - 1, coordinate.yAxis)
+        val scaffoldRight = Coordinate(coordinate.xAxis + 1, coordinate.yAxis)
 
         if (scaffoldAbove.yAxis < 0 || scaffoldBelow.yAxis > maxYAxis || scaffoldLeft.xAxis < 0 || scaffoldRight.xAxis > maxXaxis) return false
 
-        return isScaffoldOrRobot(scaffoldAbove) && isScaffoldOrRobot(scaffoldBelow)&& isScaffoldOrRobot(scaffoldLeft)&& isScaffoldOrRobot(scaffoldRight)
-
+        return isScaffoldOrRobot(scaffoldAbove) && isScaffoldOrRobot(scaffoldBelow) && isScaffoldOrRobot(scaffoldLeft) && isScaffoldOrRobot(
+            scaffoldRight
+        )
     }
 
-    fun isScaffoldOrRobot(coordinate: Coordinate) :Boolean{
-        val scaffoldValue = scaffoldMap[coordinate]!!
-        val validValues = "v<>^#"
-        return validValues.contains(scaffoldValue)
-    }
+    fun isScaffoldOrRobot(coordinate: Coordinate): Boolean {
 
+        if (scaffoldMap.containsKey(coordinate)) {
+            val scaffoldValue = scaffoldMap[coordinate]!!
+            val validValues = "v<>^#"
+            return validValues.contains(scaffoldValue)
+        }
+        return false
+    }
 
     fun processOutput() {
 
-        var xAxisCounter : Int = 0
-        var yAxisCounter : Int = 0
+        var xAxisCounter: Int = 0
+        var yAxisCounter: Int = 0
 
         while (asciiComputer.output.size > 1) {
-            if (asciiComputer.output.isEmpty()){
+
+            if (asciiComputer.output.isEmpty()) {
                 break
             }
 
-            var currentOutputValue = asciiComputer.output[0]
-
-            when (currentOutputValue){
+            when (asciiComputer.output[0]) {
                 35L -> {
-                    scaffoldMap.put(Coordinate(xAxisCounter,yAxisCounter),'#')
+                    scaffoldMap.put(Coordinate(xAxisCounter, yAxisCounter), '#')
                     if (xAxisCounter > maxXaxis) maxXaxis = xAxisCounter
                     if (yAxisCounter > maxYAxis) maxYAxis = yAxisCounter
-                    xAxisCounter ++
+                    xAxisCounter++
                 }
                 46L -> {
-                    scaffoldMap.put(Coordinate(xAxisCounter,yAxisCounter),'.')
+                    scaffoldMap.put(Coordinate(xAxisCounter, yAxisCounter), '.')
                     if (xAxisCounter > maxXaxis) maxXaxis = xAxisCounter
                     if (yAxisCounter > maxYAxis) maxYAxis = yAxisCounter
-                    xAxisCounter ++
+                    xAxisCounter++
                 }
                 10L -> { //new line
                     xAxisCounter = 0
-                    yAxisCounter ++
+                    yAxisCounter++
                 }
                 94L -> {
-                    scaffoldMap.put(Coordinate(xAxisCounter,yAxisCounter),'^')
+                    scaffoldMap.put(Coordinate(xAxisCounter, yAxisCounter), '^')
                     if (xAxisCounter > maxXaxis) maxXaxis = xAxisCounter
                     if (yAxisCounter > maxYAxis) maxYAxis = yAxisCounter
-                    xAxisCounter ++
+                    xAxisCounter++
                 }
                 60L -> {
-                    scaffoldMap.put(Coordinate(xAxisCounter,yAxisCounter),'<')
+                    scaffoldMap.put(Coordinate(xAxisCounter, yAxisCounter), '<')
                     if (xAxisCounter > maxXaxis) maxXaxis = xAxisCounter
                     if (yAxisCounter > maxYAxis) maxYAxis = yAxisCounter
-                    xAxisCounter ++
+                    xAxisCounter++
                 }
                 62L -> {
-                    scaffoldMap.put(Coordinate(xAxisCounter,yAxisCounter),'>')
+                    scaffoldMap.put(Coordinate(xAxisCounter, yAxisCounter), '>')
                     if (xAxisCounter > maxXaxis) maxXaxis = xAxisCounter
                     if (yAxisCounter > maxYAxis) maxYAxis = yAxisCounter
-                    xAxisCounter ++
+                    xAxisCounter++
                 }
                 118L -> {
-                    scaffoldMap.put(Coordinate(xAxisCounter,yAxisCounter),'v')
+                    scaffoldMap.put(Coordinate(xAxisCounter, yAxisCounter), 'v')
                     if (xAxisCounter > maxXaxis) maxXaxis = xAxisCounter
                     if (yAxisCounter > maxYAxis) maxYAxis = yAxisCounter
-                    xAxisCounter ++
+                    xAxisCounter++
                 }
 
                 88L -> {
-                    scaffoldMap.put(Coordinate(xAxisCounter,yAxisCounter),'X')
+                    scaffoldMap.put(Coordinate(xAxisCounter, yAxisCounter), 'X')
                     if (xAxisCounter > maxXaxis) maxXaxis = xAxisCounter
                     if (yAxisCounter > maxYAxis) maxYAxis = yAxisCounter
-                    xAxisCounter ++
+                    xAxisCounter++
                 }
                 else -> println("error")
             }
@@ -142,10 +341,10 @@ class ASCIIInterface {
         }
     }
 
-    fun getPrintableString () : String {
+    fun getPrintableString(): String {
         var stringToPrint = ""
 
-        for (yAxis in 0..maxYAxis){
+        for (yAxis in 0..maxYAxis) {
             for (xAxis in 0..maxXaxis) {
                 stringToPrint += scaffoldMap[Coordinate(xAxis, yAxis)]
             }
@@ -157,8 +356,8 @@ class ASCIIInterface {
 }
 
 data class Coordinate(
-    val xAxis : Int,
-    val yAxis : Int
+    val xAxis: Int,
+    val yAxis: Int
 )
 
 
@@ -178,7 +377,7 @@ class Computer {
         output.clear()
     }
 
-    fun runProgram( intCodeString: String) {
+    fun runProgram(intCodeString: String) {
         instruction = InstructionProcessor(0L, intCodeString.split(",").toMutableList())
 
         returnCode = instruction.processIntCode(input, output)
